@@ -52,36 +52,9 @@ const isi = `<!DOCTYPE html>
     flex-direction: column;
     min-height: 0;
   }
-  /* Bilah atas: identitas alat di kiri, penanda status di kanan. */
-  .top {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 46px;
-    background: #1C1B19; color: #F7F6F2;
-  }
-  .top .title { display: flex; align-items: center; gap: 14px }
-  .mark {
-    width: 38px; height: 38px; border-radius: 9px;
-    background: #C85A32; color: #fff;
-    display: grid; place-items: center;
-    font-family: ui-monospace, Consolas, monospace; font-size: 19px; font-weight: 700;
-  }
-  .top .name { font-size: 17px; font-weight: 650; letter-spacing: 0.02em }
-  .meta {
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: #A5A099;
-  }
-  .badge {
-    display: flex; align-items: center; gap: 9px;
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: #E8BC77;
-  }
-  .dot { width: 9px; height: 9px; border-radius: 50%; background: #7FC79B }
-
   /* Bagian tengah: judul besar di kiri, diagram di kanan. */
-  .mid { flex: 1; display: flex; padding: 34px 46px 0; gap: 24px; min-height: 0 }
-  .left { width: 560px; flex: none; display: flex; flex-direction: column }
+  .mid { flex: 1; display: flex; padding: 56px 60px; gap: 24px; align-items: flex-start }
+  .left { width: 620px; flex: none; display: flex; flex-direction: column; align-self: stretch }
   h1 {
     font-size: 54px; line-height: 1.0; font-weight: 700; letter-spacing: -0.035em;
   }
@@ -99,37 +72,19 @@ const isi = `<!DOCTYPE html>
   }
   .expr .cmp { color: #66666E; font-weight: 400; font-size: 17px }
   .expr .in { font-weight: 700 }
-  /* Kalimat penutup mengisi ruang bawah kolom kiri supaya tidak kosong. */
+  /* Kalimat penutup di bawah kolom kiri, menggantikan baris statistik. */
   .note {
-    margin-top: auto; padding-bottom: 22px;
+    margin-top: auto;
     font-family: ui-monospace, Consolas, monospace;
-    font-size: 14px; color: #66666E; letter-spacing: 0.02em;
+    font-size: 15px; color: #66666E; letter-spacing: 0.02em;
   }
-  .right { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0 }
+  .right { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch }
   /* Diagram diberi bingkai tipis agar tidak tampak melayang di ruang kosong. */
   #diagram {
     border: 1.5px solid #D4CFC7; border-radius: 12px; background: #fff;
     padding: 4px;
   }
-  #diagram svg { display: block; width: 390px; height: auto }
-
-  /* Baris statistik: angkanya dihitung dari hasil konversi sungguhan. */
-  .stats {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    background: #1C1B19; color: #F7F6F2;
-  }
-  .stat { padding: 14px 46px; border-right: 1px solid #3A3833 }
-  .stat:last-child { border-right: none }
-  .stat .k {
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #A5A099;
-  }
-  .stat .v {
-    margin-top: 4px;
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: 25px; font-weight: 700; color: #C85A32;
-  }
-  .stat .v small { font-size: 14px; color: #A5A099; font-weight: 400; margin-left: 6px }
+  #diagram svg { display: block; width: 420px; height: auto }
 
   /* Gaya diagram disalin dari styles.css supaya tampilannya identik. */
   .state-circle { fill: #fff; stroke: #121212; stroke-width: 1.75 }
@@ -145,15 +100,6 @@ const isi = `<!DOCTYPE html>
   .grid-dot { fill: #D4CFC7 }
 </style></head><body>
   <div class="card">
-    <div class="top">
-      <div class="title">
-        <div class="mark">ε</div>
-        <div class="name">RE to DFA Visualizer</div>
-      </div>
-      <div class="meta">Syntax tree &middot; followpos</div>
-      <div class="badge"><span class="dot"></span> Berjalan di peramban</div>
-    </div>
-
     <div class="mid">
       <div class="left">
         <h1>Regular expression <span class="accent">menjadi DFA</span>, tanpa NFA perantara.</h1>
@@ -164,13 +110,6 @@ const isi = `<!DOCTYPE html>
       <div class="right">
         <div id="diagram"></div>
       </div>
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="k">State minimum</div><div class="v" id="s-min"></div></div>
-      <div class="stat"><div class="k">Konstruksi langsung</div><div class="v" id="s-raw"></div></div>
-      <div class="stat"><div class="k">Posisi daun</div><div class="v" id="s-pos"></div></div>
-      <div class="stat"><div class="k">Alfabet</div><div class="v" id="s-alfa"></div></div>
     </div>
   </div>
   <script type="module">
@@ -184,16 +123,12 @@ const isi = `<!DOCTYPE html>
 
     document.getElementById('masukan').textContent = EXPRESI;
     document.getElementById('diagram').appendChild(buildDiagramSvg(min));
-    document.getElementById('s-min').textContent = min.states.length;
-    document.getElementById('s-raw').innerHTML = raw.states.length + '<small>state</small>';
-    document.getElementById('s-pos').innerHTML = hasil.leaves.length + '<small>posisi</small>';
-    document.getElementById('s-alfa').innerHTML = hasil.alphabet.length + '<small>simbol</small>';
 
     // Kalimat ini dihitung dari data, bukan ditulis tetap, supaya tidak pernah
     // berbeda dari kenyataan. Kalau tidak ada penghematan, bunyinya berubah.
     document.getElementById('catatan').textContent = min.states.length < raw.states.length
-      ? 'Minimisasi menggabungkan ' + raw.states.length + ' state konstruksi langsung menjadi ' + min.states.length + ' state.'
-      : 'Konstruksi langsung sudah menghasilkan DFA minimum: ' + min.states.length + ' state.';
+      ? 'Minimisasi: ' + raw.states.length + ' state konstruksi langsung menjadi ' + min.states.length + ' state.'
+      : 'Konstruksi langsung sudah minimum: ' + min.states.length + ' state.';
   </script>
 </body></html>`;
 
