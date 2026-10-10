@@ -41,21 +41,21 @@ const isi = `<!DOCTYPE html>
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     background: #F7F6F2;
     color: #121212;
-    padding: 26px;
-  }
-  .card {
-    height: 100%;
-    border: 2px solid #121212;
-    border-radius: 16px;
-    background: #F7F6F2;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+  /* Kartu mengisi penuh kanvas tanpa bingkai luar dan tanpa sudut membulat,
+     supaya tidak ada garis gelap di tepi gambar pratinjau. */
+  .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
   /* Bilah atas: identitas alat di kiri, penanda status di kanan. */
   .top {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 28px;
+    padding: 18px 46px;
     background: #1C1B19; color: #F7F6F2;
   }
   .top .title { display: flex; align-items: center; gap: 14px }
@@ -80,8 +80,8 @@ const isi = `<!DOCTYPE html>
   .dot { width: 9px; height: 9px; border-radius: 50%; background: #7FC79B }
 
   /* Bagian tengah: judul besar di kiri, diagram di kanan. */
-  .mid { flex: 1; display: flex; padding: 30px 28px 0; gap: 30px; min-height: 0 }
-  .left { width: 600px; flex: none; display: flex; flex-direction: column }
+  .mid { flex: 1; display: flex; padding: 34px 46px 0; gap: 24px; min-height: 0 }
+  .left { width: 560px; flex: none; display: flex; flex-direction: column }
   h1 {
     font-size: 54px; line-height: 1.0; font-weight: 700; letter-spacing: -0.035em;
   }
@@ -111,14 +111,14 @@ const isi = `<!DOCTYPE html>
     border: 1.5px solid #D4CFC7; border-radius: 12px; background: #fff;
     padding: 4px;
   }
-  #diagram svg { display: block; width: 330px; height: auto }
+  #diagram svg { display: block; width: 390px; height: auto }
 
   /* Baris statistik: angkanya dihitung dari hasil konversi sungguhan. */
   .stats {
     display: grid; grid-template-columns: repeat(4, 1fr);
     background: #1C1B19; color: #F7F6F2;
   }
-  .stat { padding: 14px 22px; border-right: 1px solid #3A3833 }
+  .stat { padding: 14px 46px; border-right: 1px solid #3A3833 }
   .stat:last-child { border-right: none }
   .stat .k {
     font-family: ui-monospace, Consolas, monospace;
