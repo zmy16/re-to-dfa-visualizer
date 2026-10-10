@@ -25,3 +25,7 @@ Thumbs.db
 # Berkas sementara
 *.tmp
 *.log
+
+# Berkas sementara dari scripts/make-og-image.mjs
+og-render.tmp.html
+og-chrome-profile.tmp/

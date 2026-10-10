@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://re-to-dfa-visualizer.netlify.app/sitemap.xml

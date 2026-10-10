@@ -10,10 +10,14 @@ import path from 'node:path';
 const OUT = 'public';
 
 // Berkas dan folder yang membentuk aplikasi.
+// og-image.png ikut karena dipakai meta tag Open Graph saat tautan dibagikan.
 const ENTRIES = [
   'index.html',
   'styles.css',
   'src',
+  'og-image.png',
+  'robots.txt',
+  'sitemap.xml',
 ];
 
 fs.rmSync(OUT, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

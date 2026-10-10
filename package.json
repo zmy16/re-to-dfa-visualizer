@@ -7,6 +7,7 @@
   "scripts": {
     "test": "node --test tests/engine.test.js tests/equivalence.test.js tests/minimize.test.js tests/edge.test.js",
     "serve": "node scripts/serve.mjs",
-    "build": "node scripts/prepare-public.mjs"
+    "build": "node scripts/prepare-public.mjs",
+    "og": "node scripts/make-og-image.mjs"
   }
 }
