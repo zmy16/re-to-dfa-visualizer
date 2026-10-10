@@ -290,14 +290,21 @@ function subsetConstruction(root, followposTable, leafByPosition) {
   const followposOf = new Map(followposTable.map((row) => [row.position, row.followpos]));
   const symbolOf = new Map(leafByPosition.map((leaf) => [leaf.position, leaf]));
 
+  const seen = new Set();
   const alphabet = [];
   for (const leaf of leafByPosition) {
     // Penanda akhir dan epsilon tidak masuk alfabet; simbol literal apa pun masuk,
     // termasuk "#" dan "E" yang ditulis dengan escape.
     if (leaf.endmark) continue;
     if (leaf.epsilon) continue;
-    if (!alphabet.includes(leaf.value)) alphabet.push(leaf.value);
+    if (seen.has(leaf.value)) continue;
+    seen.add(leaf.value);
+    alphabet.push(leaf.value);
   }
+  // Alfabet diurutkan menaik, bukan mengikuti urutan kemunculan di ekspresi.
+  // Tanpa pengurutan, "(1|0)*011" dan "(0|1)*011" menghasilkan urutan kolom
+  // tabel yang berbeda padahal artinya sama, dan itu membingungkan di tabel.
+  alphabet.sort();
 
   const states = [];
   const transitions = [];
