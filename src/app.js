@@ -901,12 +901,12 @@ function init() {
     dom.input.focus();
   });
 
+  // Preset hanya mengisi kolom ekspresi. Konversi tetap dijalankan lewat tombol
+  // Konversi, dan fokus tidak dipindahkan supaya halaman tidak menggulir ke bawah.
   for (const chip of dom.presets) {
     chip.addEventListener('click', () => {
       dom.input.value = chip.dataset.preset;
-      runConversion(chip.dataset.preset);
-      dom.simInput.value = '';
-      dom.simInput.focus();
+      dom.input.focus({ preventScroll: true });
     });
   }
 

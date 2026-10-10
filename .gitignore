@@ -1,6 +1,13 @@
 # Hasil build untuk deploy; dibuat ulang oleh scripts/prepare-public.mjs.
 public/
 
+# Dokumen kerja: tetap ada di lokal, tidak ikut terbit ke GitHub.
+spec.md
+prd.md
+overview.md
+agent.md
+Design/
+
 # Netlify
 .netlify/
 

@@ -54,16 +54,16 @@ Contoh:
 
 ## Struktur berkas
 
-```
-index.html                    antarmuka satu halaman, enam modul
-styles.css                    token warna terang dan gelap, layout responsif
-src/engine.js                 konversi RE ke DFA, minimisasi, simulator (tanpa DOM)
-src/app.js                    rendering AST, tabel, diagram SVG, simulator, tema
-scripts/prepare-public.mjs    menyalin berkas aplikasi ke public/ untuk deploy
-scripts/serve.mjs             server statis untuk pengembangan lokal
-tests/                        65 uji dengan node:test
-netlify.toml                  konfigurasi deploy Netlify
-```
+| Berkas | Isi |
+| :--- | :--- |
+| `index.html` | antarmuka satu halaman, enam modul |
+| `styles.css` | token warna terang dan gelap, layout responsif |
+| `src/engine.js` | konversi RE ke DFA, minimisasi, simulator (tanpa DOM) |
+| `src/app.js` | rendering AST, tabel, diagram SVG, simulator, tema |
+| `scripts/prepare-public.mjs` | menyalin berkas aplikasi ke `public/` untuk deploy |
+| `scripts/serve.mjs` | server statis untuk pengembangan lokal |
+| `tests/` | 65 uji dengan `node:test` |
+| `netlify.toml` | konfigurasi deploy Netlify |
 
 Logika konversi sengaja dipisahkan dari tampilan dan tidak menyentuh DOM, sehingga bisa diuji langsung dengan Node dan dipakai ulang di tempat lain.
 
@@ -88,7 +88,7 @@ Logika konversi sengaja dipisahkan dari tampilan dan tidak menyentuh DOM, sehing
 
 ## Deploy
 
-Aplikasi ini statis tanpa langkah build, sehingga bisa diterbitkan di mana saja. Konfigurasi `netlify.toml` sudah disiapkan untuk Netlify: perintah build hanya menyalin `index.html`, `styles.css`, dan `src/` ke `public/`, sehingga folder `Design/`, `tests/`, dan dokumen `.md` tidak ikut terbit.
+Aplikasi ini statis tanpa langkah build, sehingga bisa diterbitkan di mana saja. Konfigurasi `netlify.toml` sudah disiapkan untuk Netlify: perintah build hanya menyalin `index.html`, `styles.css`, dan `src/` ke `public/`, sehingga berkas lain tidak ikut terbit.
 
 Untuk deploy manual:
 
@@ -101,10 +101,3 @@ npx netlify deploy --prod
 - Konversi dibatasi 512 state untuk mencegah halaman membeku pada ekspresi besar.
 - Panel minimisasi menampilkan kelompok state per putaran; diagram belum digambar ulang tiap putaran.
 - Alfabet dibatasi satu karakter per simbol.
-
-## Dokumen
-
-- `overview.md` — dasar teori, model data, dan alur konversi.
-- `prd.md` — kebutuhan produk dan cakupan rilis.
-- `spec.md` — perilaku rinci, kriteria penerimaan, dan hasil verifikasi.
-- `agent.md` — panduan kerja untuk agen pengembang.

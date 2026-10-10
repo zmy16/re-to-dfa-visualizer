@@ -16,7 +16,7 @@ const ENTRIES = [
   'src',
 ];
 
-fs.rmSync(OUT, { recursive: true, force: true });
+fs.rmSync(OUT, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 fs.mkdirSync(OUT, { recursive: true });
 
 let berkas = 0;
