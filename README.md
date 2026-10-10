@@ -58,7 +58,6 @@ Contoh:
 re-to-dfa-visualizer/
 ├── index.html                     antarmuka satu halaman, enam modul
 ├── styles.css                     token warna terang dan gelap, layout responsif
-├── netlify.toml                   konfigurasi deploy Netlify
 ├── package.json                   skrip test, serve, dan build
 ├── src/
 │   ├── engine.js                  konversi RE ke DFA, minimisasi, simulator (tanpa DOM)
@@ -66,14 +65,10 @@ re-to-dfa-visualizer/
 ├── scripts/
 │   ├── serve.mjs                  server statis untuk pengembangan lokal
 │   └── prepare-public.mjs         menyalin berkas aplikasi ke public/ untuk deploy
-└── tests/
-    ├── engine.test.js             operator, prioritas, kurung, state penerima
-    ├── equivalence.test.js        hasil DFA dibandingkan dengan regex acuan
-    ├── minimize.test.js           minimisasi dan pembuktian minimalitas
-    └── edge.test.js               escape, epsilon, dan kasus batas alfabet
+└── netlify.toml                   konfigurasi deploy Netlify
 ```
 
-`tests/` tidak ikut terbit: perintah build hanya menyalin `index.html`, `styles.css`, dan `src/` ke `public/`.
+Uji tidak disertakan di repositori publik ini. Untuk menjalankannya, letakkan berkas uji di `tests/` lalu jalankan `npm test`.
 
 Logika konversi sengaja dipisahkan dari tampilan dan tidak menyentuh DOM, sehingga bisa diuji langsung dengan Node dan dipakai ulang di tempat lain.
 
