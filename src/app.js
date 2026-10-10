@@ -14,13 +14,6 @@ const dom = {
   astCanvas: el('ast-canvas'),
   followposTable: el('followpos-table'),
   dfaTables: el('dfa-tables'),
-  dfaSwitch: el('dfa-switch'),
-  dfaSwitchNote: el('dfa-switch-note'),
-  minimizeSteps: el('minimize-steps'),
-  minimizeLabel: el('minimize-label'),
-  minimizeGroups: el('minimize-groups'),
-  minimizePrev: el('minimize-prev'),
-  minimizeNext: el('minimize-next'),
   positionNote: el('position-note'),
   dfaCanvas: el('dfa-canvas'),
   simForm: el('sim-form'),
@@ -34,13 +27,13 @@ let result = null;
 let highlightedPosition = null;
 let activeStateId = null;
 let activeTransition = null; // { from, symbol, to }
-let viewMode = 'raw'; // 'raw' hasil konstruksi langsung, 'min' DFA minimum
-let minimizeStep = 0;
 
-// Automaton yang sedang ditampilkan tabel, diagram, dan simulator.
+// Automaton yang ditampilkan tabel, diagram, dan simulator: DFA minimum.
+// Hasil minimisasi menerima bahasa yang sama persis dengan hasil konstruksi
+// langsung, hanya dengan jumlah state paling sedikit, jadi inilah yang dipakai.
 function activeView() {
   if (!result) return null;
-  return result.views?.[viewMode] ?? result;
+  return result.views?.min ?? result;
 }
 
 /* ---------------- utilitas SVG ---------------- */
@@ -480,9 +473,14 @@ function diagramScaffold(width, height, nodeRadius) {
   defs.appendChild(grid);
 
   // Dua marker: satu untuk sisi biasa, satu untuk sisi aktif pada jejak simulasi.
+  //
+  // refX 10 menaruh ujung mata panah tepat di titik akhir path (viewBox 10x10,
+  // ujung runcing ada di x=10). Dengan begitu panah menyentuh tepi lingkaran
+  // tanpa perlu menarik mundur ujung path, yang dulu membuat panah loop berputar
+  // ke arah salah karena arah datang kurvanya hampir vertikal di ujung.
   for (const [id, cls] of [['arrow', 'arrow-head'], ['arrow-active', 'arrow-head arrow-head--active']]) {
     const marker = svg('marker', {
-      id, viewBox: '0 0 10 10', refX: 9, refY: 5,
+      id, viewBox: '0 0 10 10', refX: 10, refY: 5,
       markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse',
     });
     marker.appendChild(svg('path', { d: 'M 0 0 L 10 5 L 0 10 z', class: cls }));
@@ -501,15 +499,26 @@ function diagramScaffold(width, height, nodeRadius) {
 // dan garis lurus untuk sisi tunggal. Mengembalikan lintasan sekaligus titik labelnya.
 function edgeGeometry(from, to, nodeRadius, hasReverse) {
   if (from === to) {
-    // Loop mandiri: busur kecil tepat di atas state, bukan bulatan besar.
-    const loopRadius = nodeRadius * 0.72;
-    const halfSpan = nodeRadius * 0.52;
-    const baseY = from.y - nodeRadius + 2;
-    const topY = from.y - nodeRadius - loopRadius * 0.62;
+    // Loop mandiri: busur setengah lingkaran yang menempel di tepi atas node.
+    //
+    // Kedua ujung busur duduk di tepi lingkaran pada sudut 55 derajat dari titik
+    // puncak, jadi tidak ada bagian busur yang tertanam di dalam node.
+    // Ujung akhir dikembalikan tepat ke tepi lingkaran: penarikan mundur tidak
+    // dipakai karena arah datang kurva di sini hampir vertikal, sehingga mata
+    // panah berputar ke arah yang salah. Marker-nya sendiri yang diatur supaya
+    // tidak menarik panah ke belakang (lihat refX pada marker panah).
+    const spread = (55 * Math.PI) / 180;
+    const startX = from.x - nodeRadius * Math.sin(spread);
+    const startY = from.y - nodeRadius * Math.cos(spread);
+    const endX = from.x + nodeRadius * Math.sin(spread);
+    const endY = startY;
+    // Tinggi busur: cukup menjulang supaya terbaca sebagai loop, bukan garis datar.
+    const loopHeight = nodeRadius * 1.55;
+    const controlY = startY - loopHeight;
     return {
-      path: `M ${from.x - halfSpan} ${baseY} C ${from.x - halfSpan * 1.5} ${topY} ${from.x + halfSpan * 1.5} ${topY} ${from.x + halfSpan} ${baseY}`,
+      path: `M ${startX} ${startY} C ${startX} ${controlY} ${endX} ${controlY} ${endX} ${endY}`,
       labelX: from.x,
-      labelY: from.y - nodeRadius - 16,
+      labelY: controlY - 9,
     };
   }
 
@@ -754,30 +763,11 @@ function setActiveState(stateId) {
 
 /* ---------------- orkestrasi ---------------- */
 
-// Menyelaraskan tombol pemilih dengan mode yang aktif.
-function syncDfaSwitch() {
-  for (const button of dom.dfaSwitch.querySelectorAll('[data-view]')) {
-    const selected = button.dataset.view === viewMode;
-    button.classList.toggle('is-selected', selected);
-    button.setAttribute('aria-pressed', String(selected));
-  }
-  if (!result) {
-    dom.dfaSwitchNote.textContent = '';
-    return;
-  }
-  const raw = result.views.raw.states.length;
-  const min = result.views.min.states.length;
-  dom.dfaSwitchNote.textContent = viewMode === 'min'
-    ? `DFA minimum: ${min} state dari ${raw} state hasil konstruksi langsung.`
-    : `Hasil konstruksi langsung: ${raw} state${min < raw ? `, dapat dipadatkan menjadi ${min} state` : ', sudah minimum'}.`;
-}
-
-// Menyetel ulang seluruh keadaan turunan: sorotan, state aktif, dan langkah minimisasi.
+// Menyetel ulang seluruh keadaan turunan: sorotan dan state aktif.
 function resetUiState() {
   highlightedPosition = null;
   activeStateId = null;
   activeTransition = null;
-  minimizeStep = 0;
 }
 
 // Mengosongkan semua keluaran supaya hasil lama tidak tampak seperti hasil input baru.
@@ -790,8 +780,6 @@ function clearResults() {
   renderDfaTables(null);
   renderDfaDiagram(null);
   renderSimulator();
-  syncDfaSwitch();
-  renderMinimizeSteps();
 }
 
 function runConversion(rawInput) {
@@ -815,40 +803,12 @@ function runConversion(rawInput) {
   code.textContent = result.augmented;
   dom.augmented.append(label, code);
 
-  syncDfaSwitch();
+  const view = activeView();
   renderAst(result.root);
   renderFollowpos(result.followposTable);
-  const view = activeView();
   renderDfaTables(view);
   renderDfaDiagram(view);
   renderSimulator();
-  renderMinimizeSteps();
-}
-
-function minimizeRoundCount() {
-  return result?.views?.min?.rounds?.length ?? 0;
-}
-
-function renderMinimizeSteps() {
-  const host = dom.minimizeSteps;
-  // Jejak partisi hanya relevan ketika tabel dan diagram menampilkan DFA minimum.
-  const rounds = viewMode === 'min' ? (result?.views?.min?.rounds ?? []) : [];
-  if (rounds.length === 0) {
-    host.hidden = true;
-    return;
-  }
-  host.hidden = false;
-  const round = rounds[Math.min(minimizeStep, rounds.length - 1)];
-  dom.minimizeLabel.textContent = `Langkah ${Math.min(minimizeStep, rounds.length - 1) + 1} dari ${rounds.length}: ${round.label}. ${round.groups.length} kelompok.`;
-  clear(dom.minimizeGroups);
-  for (const group of round.groups) {
-    const li = document.createElement('li');
-    li.className = 'minimize-group';
-    li.textContent = `{${group.join(', ')}}`;
-    dom.minimizeGroups.appendChild(li);
-  }
-  dom.minimizePrev.disabled = minimizeStep === 0;
-  dom.minimizeNext.disabled = minimizeStep >= rounds.length - 1;
 }
 
 /* ---------------- tema terang / gelap ---------------- */
@@ -913,29 +873,6 @@ function init() {
   dom.simForm.addEventListener('submit', (event) => {
     event.preventDefault();
     renderSimulator();
-  });
-
-  dom.dfaSwitch.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-view]');
-    if (!button) return;
-    viewMode = button.dataset.view;
-    activeStateId = null;
-    activeTransition = null;
-    syncDfaSwitch();
-    const view = activeView();
-    renderDfaTables(view);
-    renderDfaDiagram(view);
-    renderSimulator();
-    renderMinimizeSteps();
-  });
-
-  dom.minimizePrev.addEventListener('click', () => {
-    minimizeStep = Math.max(0, minimizeStep - 1);
-    renderMinimizeSteps();
-  });
-  dom.minimizeNext.addEventListener('click', () => {
-    minimizeStep = Math.min(minimizeRoundCount() - 1, minimizeStep + 1);
-    renderMinimizeSteps();
   });
 
   // Pemeriksaan awal: tampilkan status kosong, bukan hasil palsu.

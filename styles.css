@@ -472,68 +472,6 @@ td.is-position-match { color: var(--accent); font-weight: 650; }
 }
 .legend span { display: inline-flex; align-items: center; gap: 7px; }
 .swatch { width: 12px; height: 12px; border: 1.5px solid var(--ink); border-radius: 50%; }
-/* Pemilih automaton: hasil konstruksi langsung atau DFA minimum. */
-.dfa-switch {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.switch-btn {
-  padding: 8px 14px;
-  font-size: 0.8125rem;
-  font-weight: 550;
-  color: var(--ink-2);
-  background: var(--surface);
-  border: 1px solid var(--control);
-  border-radius: var(--r-md);
-}
-.switch-btn:hover { color: var(--ink); background: var(--surface-subtle); }
-.switch-btn.is-selected {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.switch-note { font-size: 0.8125rem; color: var(--ink-2); }
-
-/* Panel langkah minimisasi: menampilkan partisi Moore putaran demi putaran. */
-.minimize-steps {
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-md);
-  background: var(--surface);
-  contain: layout paint style;
-}
-.minimize-steps[hidden] { display: none; }
-.minimize-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.minimize-head strong { font-size: 0.875rem; }
-.minimize-buttons { display: flex; gap: 8px; margin-left: auto; }
-.minimize-buttons .switch-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.minimize-groups {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.minimize-group {
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  padding: 4px 10px;
-  border: 1px solid var(--accent);
-  border-radius: var(--r-sm);
-  background: var(--accent-soft);
-  color: var(--accent);
-}
 
 .swatch--accept {
   box-shadow: 0 0 0 3px var(--surface), 0 0 0 4.5px var(--accent);
@@ -569,10 +507,11 @@ td.is-position-match { color: var(--accent); font-weight: 650; }
   .masthead-actions { margin-left: auto; }
   .btn { min-height: 44px; }
   .theme-btn { width: 44px; height: 44px; }
-  /* Tap target minimum 44px untuk semua kontrol di layar sentuh. */
-  .chip { min-height: 44px; padding-inline: 14px; }
-  .link-btn { min-height: 44px; min-width: 44px; padding: 2px 10px; }
-  .switch-btn { min-height: 44px; }
+  /* Chip preset dibuat ringkas. Jarak antar chip yang menjaga ketepatan sentuh,
+     bukan tinggi atau lebar kotaknya. */
+  .chip { min-height: 30px; padding: 4px 9px; font-size: 0.75rem; }
+  .presets { gap: 8px 6px; margin-top: 12px; }
+  .link-btn { min-height: 40px; min-width: 40px; padding: 2px 10px; }
   .input-re { min-height: 44px; font-size: 16px; } /* 16px mencegah zoom otomatis di iOS */
 }
 
