@@ -10,12 +10,16 @@ import path from 'node:path';
 const OUT = 'public';
 
 // Berkas dan folder yang membentuk aplikasi.
-// og-image.png ikut karena dipakai meta tag Open Graph saat tautan dibagikan.
+// logo.svg dan ikon dipakai favicon serta ikon layar utama saat dipasang.
 const ENTRIES = [
   'index.html',
   'styles.css',
   'src',
   'og-image.png',
+  'logo.svg',
+  'favicon-32.png',
+  'icon-16.png',
+  'apple-touch-icon.png',
   'robots.txt',
   'sitemap.xml',
 ];

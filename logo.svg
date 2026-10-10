@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="RE to DFA Visualizer">
+  <!--
+    Logo alat ini.
+
+    Isinya alur kerja produk: di kiri, tiga garis pendek yang melambangkan
+    rangkaian ekspresi reguler (panjangnya berbeda, seperti potongan simbol
+    a, b, dan operator). Di kanan, satu state DFA berupa lingkaran ganda
+    sebagai penanda state penerima. Sebuah panah menghubungkan keduanya,
+    jadi terbaca sebagai "ekspresi menjadi automaton".
+
+    Tidak ada huruf di dalamnya, supaya tetap terbaca pada ukuran favicon
+    16 piksel di tab peramban.
+  -->
+  <rect width="64" height="64" rx="14" fill="#1C1B19"/>
+
+  <!-- Rangkaian ekspresi di kiri: tiga garis, tinggi berjenjang seperti simbol. -->
+  <g fill="#F2F0EB">
+    <rect x="12" y="22" width="3" height="20" rx="1.5" />
+    <rect x="19" y="27" width="3" height="10" rx="1.5" />
+    <rect x="26" y="22" width="3" height="20" rx="1.5" />
+  </g>
+
+  <!-- Panah: arah konversi. -->
+  <path d="M34 32 L41 32" stroke="#C85A32" stroke-width="3" stroke-linecap="round" />
+  <path d="M40 26.5 L46 32 L40 37.5" fill="none" stroke="#C85A32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- State DFA di kanan: lingkaran ganda, tanda state penerima. -->
+  <circle cx="52" cy="32" r="8.5" fill="none" stroke="#F2F0EB" stroke-width="3" />
+  <circle cx="52" cy="32" r="3.5" fill="#C85A32" />
+</svg>

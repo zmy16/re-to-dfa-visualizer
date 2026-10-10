@@ -29,3 +29,10 @@ Thumbs.db
 # Berkas sementara dari scripts/make-og-image.mjs
 og-render.tmp.html
 og-chrome-profile.tmp/
+
+# Pratinjau sementara dari scripts/make-favicon.mjs
+logo-preview.tmp.html
+logo-preview.tmp.png
+logo-one.tmp.html
+tabcek.tmp.html
+tab-final.png
