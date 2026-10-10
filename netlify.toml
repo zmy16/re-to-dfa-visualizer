@@ -1,0 +1,41 @@
+# Konfigurasi Netlify untuk RE to DFA Visualizer.
+#
+# Aplikasi ini statis tanpa dependensi, jadi tidak ada langkah build. Yang
+# dilakukan perintah build hanya menyalin berkas aplikasi ke public/, supaya
+# Design/, tests/, dan dokumen .md tidak ikut terbit.
+#
+# Untuk deploy manual tanpa Git: `npx netlify deploy --prod` dari folder ini.
+
+[build]
+  publish = "public"
+  command = "node scripts/prepare-public.mjs"
+
+# Pratinjau deploy dan deploy produksi memakai aturan yang sama.
+[context.deploy-preview]
+  command = "node scripts/prepare-public.mjs"
+
+[context.branch-deploy]
+  command = "node scripts/prepare-public.mjs"
+
+# Berkas statis boleh di-cache lama karena setiap deploy menghasilkan URL baru.
+[[headers]]
+  for = "/src/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# index.html selalu diambil ulang agar perubahan langsung terlihat.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Halaman satu berkas: rute tak dikenal dikembalikan ke index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

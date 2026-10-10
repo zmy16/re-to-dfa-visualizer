@@ -1,0 +1,581 @@
+/* Arah visual diambil dari Design/design.md (kanvas hangat, aksen terracotta, elevasi flat).
+   Dial: ENERGY 1 / RHYTHM 2 / MOTION 1. Alasan: alat pengajaran, jadi keterbacaan simbol
+   dan kepadatan informasi lebih penting daripada gaya. Kisi titik hanya muncul di kanvas
+   diagram, karena itu permukaan gambar automaton, bukan latar dekoratif.
+   Penyimpangan dari design.md: token teks sekunder dan tersier digelapkan agar lolos
+   WCAG AA (4.5:1); rasionya dicatat di komentar tiap token. */
+
+:root {
+  /* Palet terang: 2 warna inti (tinta, kertas) + 1 aksen. */
+  --canvas: #F7F6F2;
+  --surface: #FFFFFF;
+  --surface-subtle: #EFECE6;
+
+  --ink: #121212;      /* 17.3:1 di kanvas */
+  --ink-2: #66666E;    /* 5.3:1 di kanvas, 5.7:1 di surface (design.md: #71717A hanya 4.47:1) */
+  --ink-3: #6B6B74;    /* 4.9:1 di kanvas (design.md: #A1A1AA hanya 2.37:1) */
+
+  --line: #E5E2DC;     /* garis rambut dekoratif, bukan batas kontrol */
+  --line-2: #D4CFC7;
+  --control: #8A8277;  /* batas input dan tombol: 3.5:1, memenuhi batas komponen */
+
+  --accent: #A83718;        /* teks dan penanda: 6.0:1 di kanvas */
+  --accent-strong: #B34E2A; /* isi tombol; putih di atasnya 5.2:1 */
+  --accent-soft: #F7E9E3;
+
+  --ok: #166534;
+  --ok-soft: #E8F0EB;
+  --warn: #92400E;
+  --warn-soft: #FDF6E8;
+  --bad: #991B1B;
+  --bad-soft: #F6E8E8;
+
+  --btn-bg: var(--accent-strong);
+  --btn-fg: #FFFFFF;
+  --btn-bg-hover: #9E3417;
+
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Mono khusus data simbol: regex, himpunan posisi, label state, isi tabel. */
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --gap: 16px;
+}
+
+[data-theme="dark"] {
+  --canvas: #1A1917;
+  --surface: #232220;
+  --surface-subtle: #2C2A27;
+
+  --ink: #F2F0EB;      /* 15.4:1 di kanvas */
+  --ink-2: #B8B4AC;    /* 8.5:1 */
+  --ink-3: #A5A099;    /* 6.8:1 */
+
+  --line: #3A3833;
+  --line-2: #4A463F;
+  --control: #757066;  /* 3.6:1 di kanvas */
+
+  --accent: #E0714A;        /* 5.6:1 di kanvas */
+  --accent-strong: #E0714A;
+  --accent-soft: #3A2419;
+
+  --ok: #7FC79B;
+  --ok-soft: #1E2E25;
+  --warn: #E8BC77;
+  --warn-soft: #332A18;
+  --bad: #EE9A9A;
+  --bad-soft: #33201F;
+
+  --btn-bg: var(--accent);
+  --btn-fg: #1A1917;   /* tinta kanvas di atas aksen: 5.6:1 */
+  --btn-bg-hover: #EC8A66;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: var(--accent); }
+
+code { font-family: var(--mono); font-size: 0.92em; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Fokus terlihat untuk semua elemen interaktif. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.wrap {
+  width: min(1240px, 100% - 40px);
+  margin-inline: auto;
+}
+
+/* ---------- Kepala halaman ---------- */
+.masthead {
+  border-bottom: 1px solid var(--line);
+  background: var(--canvas);
+}
+.masthead .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 18px 0 15px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand h1 { font-size: 1.125rem; font-weight: 650; }
+.brand .ver {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.masthead-actions { display: flex; gap: 10px; align-items: center; }
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--control);
+  border-radius: var(--r-md);
+}
+.theme-btn:hover { background: var(--surface-subtle); color: var(--accent); }
+.theme-btn svg { display: block; }
+
+.lede { border-bottom: 1px solid var(--line); padding: 28px 0 32px; }
+.lede h2 {
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
+  font-weight: 650;
+  max-width: 34ch;
+}
+.lede p { margin-top: 12px; color: var(--ink-2); max-width: 68ch; }
+
+/* ---------- Modul ---------- */
+main { padding-bottom: 72px; }
+
+/*
+ * Kinerja saat menggulir.
+ *
+ * Kanvas diagram sempat memakai `background-image: radial-gradient(...)` dengan
+ * `background-size: 22px 22px` pada elemen setinggi ~1000px. Latar berulang
+ * seperti itu dilukis ulang saat area itu masuk viewport, dan itu terbukti
+ * menahan frame: median 33ms per frame ketika menggulir, jauh di bawah 60fps.
+ *
+ * Penggantinya: kisi titik digambar sebagai <pattern> di dalam SVG diagram,
+ * jadi hanya dilukis sekali. `contain` memberi tahu browser batas repaint,
+ * dan `content-visibility` melewatkan layout modul yang sedang di luar layar.
+ */
+.module {
+  padding: 36px 0;
+  border-bottom: 1px solid var(--line);
+  content-visibility: auto;
+  /* Tinggi perkiraan menjaga scrollbar tidak melompat sebelum modul di-layout. */
+  contain-intrinsic-size: auto 620px;
+}
+/* RHYTHM 2: modul diagram diberi jeda lebih longgar karena kanvasnya lebih berat. */
+.module--roomy { padding: 48px 0; contain-intrinsic-size: auto 980px; }
+
+.module-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.step-no {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--accent);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+}
+.module-head h2 { font-size: 1.0625rem; font-weight: 650; }
+.module-head .hint {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  margin-left: auto;
+  max-width: 48ch;
+}
+
+/* ---------- Kontrol ---------- */
+.field-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
+.input-re {
+  flex: 1 1 260px;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 1rem;
+  padding: 11px 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--control);
+  border-radius: var(--r-md);
+}
+.input-re::placeholder { color: var(--ink-3); }
+
+button { font-family: inherit; font-size: 0.875rem; cursor: pointer; }
+
+.btn {
+  padding: 11px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.btn--primary { background: var(--btn-bg); color: var(--btn-fg); }
+.btn--primary:hover { background: var(--btn-bg-hover); }
+.btn--quiet {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--control);
+}
+.btn--quiet:hover { background: var(--surface-subtle); }
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+.presets .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.note {
+  margin-top: 14px;
+  padding: 10px 13px;
+  border-radius: var(--r-md);
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+.note--error { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.note--warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.note ul { margin: 4px 0 0; padding-left: 18px; }
+.note[hidden] { display: none; }
+
+.augmented { margin-top: 14px; font-size: 0.875rem; color: var(--ink-2); }
+.augmented code {
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  padding: 3px 7px;
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Tabel ---------- */
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  contain: layout paint style;
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+caption {
+  text-align: left;
+  padding: 12px 14px;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  border-bottom: 1px solid var(--line);
+}
+th, td {
+  text-align: left;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+thead th {
+  font-size: 0.75rem;
+  /* Tanpa uppercase: header tabel transisi berisi simbol alfabet, dan "a" tidak sama dengan "A". */
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  font-weight: 600;
+  background: var(--surface-subtle);
+}
+tbody tr:last-child td { border-bottom: none; }
+td.sym, td.set, .state-id { font-family: var(--mono); }
+tr.is-highlighted { background: var(--accent-soft); }
+/* Baris state yang memuat posisi tersorot dari tabel followpos. */
+tr.is-position-match { box-shadow: inset 3px 0 0 var(--accent); }
+td.is-active-cell {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.rule-text { color: var(--ink-2); font-size: 0.8125rem; min-width: 22ch; }
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
+  color: var(--ink-2);
+}
+.tag--start { background: var(--ink); color: var(--canvas); border-color: var(--ink); }
+.tag--accept { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+.link-btn {
+  background: none;
+  border: 1px solid var(--control);
+  border-radius: var(--r-sm);
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+.link-btn:hover { border-color: var(--accent); color: var(--accent); }
+.link-btn[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- Kanvas diagram ---------- */
+/* Kisi titik digambar sebagai <pattern> di dalam SVG, bukan latar CSS berulang. */
+.canvas {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  overflow: auto;
+  contain: layout paint style;
+}
+/* Kanvas bisa digulir mendatar; SVG dipusatkan selama masih muat. */
+.canvas svg { display: block; margin-inline: auto; }
+
+.node-box { fill: var(--surface); stroke: var(--control); stroke-width: 1.25; }
+.node-box.is-internal { fill: var(--surface-subtle); }
+.node-group.is-highlighted .node-box { stroke: var(--accent); stroke-width: 2.25; }
+.node-group.is-highlighted .node-symbol { fill: var(--accent); }
+.node-symbol { font-family: var(--mono); font-weight: 600; fill: var(--ink); }
+.node-symbol.is-leaf { font-size: 16px; }
+.node-symbol.is-operator { font-size: 20px; line-height: 1; }
+.node-pos { font-family: var(--mono); font-size: 10px; font-weight: 650; fill: var(--accent); }
+.node-anno { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-2); }
+.edge { stroke: var(--line-2); stroke-width: 1.25; fill: none; }
+.edge-label { font-family: var(--mono); font-size: 11px; fill: var(--ink); }
+.edge-label-bg { fill: var(--canvas); stroke: var(--line-2); }
+
+.state-circle { fill: var(--surface); stroke: var(--ink); stroke-width: 1.75; }
+.state-circle--accept-inner { fill: none; stroke: var(--ink); stroke-width: 1.75; }
+/* Cincin luar untuk state yang memuat posisi tersorot dari tabel followpos. */
+.state-ring { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 3 3; }
+.state-group.is-position-match .state-circle { stroke: var(--accent); }
+.state-group.is-position-match .state-label { fill: var(--accent); }
+.state-positions--match { fill: var(--accent); font-weight: 650; }
+.state-group.is-active .state-circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+.state-group.is-active .state-label { fill: var(--accent); }
+.state-group.is-accept .state-circle--accept-inner { stroke: var(--accent); }
+.state-label { font-family: var(--mono); font-size: 15px; font-weight: 650; fill: var(--ink); }
+.state-positions { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-2); }
+.edge--active { stroke: var(--accent); stroke-width: 2.5; }
+/* Sisi yang dipicu posisi tersorot: putus-putus, agar tidak tertukar dengan sisi aktif simulator. */
+.edge--position { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 3; }
+.edge-label-bg--position { stroke: var(--accent); }
+.is-position-match { background: var(--accent-soft); }
+td.is-position-match { color: var(--accent); font-weight: 650; }
+.pos-mark {
+  background: var(--accent);
+  color: var(--btn-fg);
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: 700;
+}
+.edge-label--active { fill: var(--accent); font-weight: 700; }
+.start-arrow { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+.arrow-head { fill: var(--ink-3); }
+.arrow-head--active { fill: var(--accent); }
+.grid-dot { fill: var(--line-2); }
+
+/* ---------- Simulator ---------- */
+.sim-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.sim-row .input-re { flex: 1 1 200px; }
+
+/* Jarak konsisten antara baris input simulator dan isi hasilnya, termasuk kotak status kosong. */
+.sim-output { margin-top: 20px; }
+
+.trace {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.trace li {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.trace li .sym { color: var(--accent); font-weight: 650; }
+.trace li.is-final { border-color: var(--accent); }
+.trace li.is-final.ok { border-color: var(--ok); }
+.trace li.is-final.bad { border-color: var(--bad); }
+
+.verdict {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid;
+  font-size: 0.9375rem;
+}
+.verdict.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.verdict.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+
+/* ---------- Legenda dan catatan metode ---------- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 14px;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { width: 12px; height: 12px; border: 1.5px solid var(--ink); border-radius: 50%; }
+/* Pemilih automaton: hasil konstruksi langsung atau DFA minimum. */
+.dfa-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.switch-btn {
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--control);
+  border-radius: var(--r-md);
+}
+.switch-btn:hover { color: var(--ink); background: var(--surface-subtle); }
+.switch-btn.is-selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.switch-note { font-size: 0.8125rem; color: var(--ink-2); }
+
+/* Panel langkah minimisasi: menampilkan partisi Moore putaran demi putaran. */
+.minimize-steps {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  contain: layout paint style;
+}
+.minimize-steps[hidden] { display: none; }
+.minimize-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.minimize-head strong { font-size: 0.875rem; }
+.minimize-buttons { display: flex; gap: 8px; margin-left: auto; }
+.minimize-buttons .switch-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.minimize-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.minimize-group {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.swatch--accept {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 4.5px var(--accent);
+  border-color: var(--accent);
+}
+
+.method { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 20px; }
+.method dt { font-weight: 650; font-size: 0.9375rem; margin-top: 14px; }
+.method dd { margin: 4px 0 0; color: var(--ink-2); font-size: 0.875rem; }
+
+.empty {
+  padding: 28px 14px;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+/* ---------- Responsif ---------- */
+@media (min-width: 860px) {
+  .method { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+}
+
+@media (max-width: 640px) {
+  .wrap { width: calc(100% - 32px); }
+  .module-head .hint { margin-left: 0; }
+  /* Kunci kepala halaman jadi satu baris: merek di kiri, tombol tema di kanan. */
+  .masthead .wrap { flex-wrap: nowrap; align-items: center; gap: 12px; }
+  .brand { min-width: 0; }
+  .brand h1 { font-size: 1rem; }
+  .masthead-actions { margin-left: auto; }
+  .btn { min-height: 44px; }
+  .theme-btn { width: 44px; height: 44px; }
+  /* Tap target minimum 44px untuk semua kontrol di layar sentuh. */
+  .chip { min-height: 44px; padding-inline: 14px; }
+  .link-btn { min-height: 44px; min-width: 44px; padding: 2px 10px; }
+  .switch-btn { min-height: 44px; }
+  .input-re { min-height: 44px; font-size: 16px; } /* 16px mencegah zoom otomatis di iOS */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

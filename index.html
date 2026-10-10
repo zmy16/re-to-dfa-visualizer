@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RE to DFA Visualizer</title>
+<meta name="description" content="Konversi Regular Expression ke DFA lewat syntax tree dan followpos, lengkap dengan tabel dan simulator string.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23A83718'/%3E%3Ctext x='8' y='12' font-family='monospace' font-size='10' font-weight='700' text-anchor='middle' fill='%23fff'%3E%CE%B5%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="brand">
+      <h1>RE to DFA Visualizer</h1>
+      <span class="ver">followpos &middot; rilis 1</span>
+    </div>
+    <div class="masthead-actions">
+      <button type="button" id="theme-toggle" class="theme-btn" aria-pressed="false" aria-label="Aktifkan mode gelap" title="Ubah tema"></button>
+    </div>
+  </div>
+</header>
+
+<section class="lede">
+  <div class="wrap">
+    <h2>Regular expression menjadi DFA, tanpa NFA perantara.</h2>
+    <p>Ekspresi diubah menjadi syntax tree, setiap daun diberi nomor posisi, lalu <code>followpos</code> menentukan transisi DFA secara langsung. Setiap tahap ditampilkan agar hasilnya bisa diperiksa, bukan hanya diterima.</p>
+  </div>
+</section>
+
+<main>
+
+  <!-- 1. Input -->
+  <section class="module" id="konversi">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">LANGKAH 1</span>
+        <h2>Ekspresi dan preprocessing</h2>
+        <span class="hint">Alfabet bebas: huruf, angka, atau simbol tunggal. Operator: <code>|</code> (atau), <code>*</code> (Kleene star), tanda kurung, dan <code>E</code> untuk string kosong. Tulis <code>\</code> di depan karakter bila ingin memakainya sebagai simbol literal.</span>
+      </div>
+
+      <form id="re-form">
+        <div class="field-row">
+          <label class="visually-hidden" for="re-input">Ekspresi reguler</label>
+          <input id="re-input" class="input-re" type="text" name="re" autocomplete="off" spellcheck="false"
+                 placeholder="contoh: (a|b)*abb" aria-describedby="re-status">
+          <button type="submit" class="btn btn--primary">Konversi</button>
+          <button type="button" id="re-clear" class="btn btn--quiet">Bersihkan</button>
+        </div>
+      </form>
+
+      <div class="presets" role="group" aria-label="Preset ekspresi">
+        <span class="label">Preset</span>
+        <button type="button" class="chip" data-preset="a">a</button>
+        <button type="button" class="chip" data-preset="a*">a*</button>
+        <button type="button" class="chip" data-preset="a|b">a|b</button>
+        <button type="button" class="chip" data-preset="ab">ab</button>
+        <button type="button" class="chip" data-preset="(a|b)*abb">(a|b)*abb</button>
+        <button type="button" class="chip" data-preset="(0|1)*101">(0|1)*101</button>
+        <button type="button" class="chip" data-preset="a(b|c)*d">a(b|c)*d</button>
+        <button type="button" class="chip" data-preset="a*b*">a*b*</button>
+        <button type="button" class="chip" data-preset="E">E</button>
+      </div>
+
+      <div id="re-status" class="note" hidden role="status" aria-live="polite"></div>
+      <p id="re-augmented" class="augmented" hidden></p>
+    </div>
+  </section>
+
+  <!-- 2. AST -->
+  <section class="module" id="ast">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">LANGKAH 2</span>
+        <h2>Syntax tree beranotasi</h2>
+        <span class="hint">Dibaca bottom-up. Tiap node menampilkan <code>nullable</code> (N), <code>firstpos</code> (F), dan <code>lastpos</code> (L); daun punya nomor posisi.</span>
+      </div>
+      <div id="ast-canvas" class="canvas">
+        <p class="empty">Jalankan konversi untuk melihat syntax tree.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Followpos -->
+  <section class="module" id="followpos">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">LANGKAH 3</span>
+        <h2>Tabel followpos</h2>
+        <span class="hint">Klik baris untuk menyorot posisi daun terkait pada syntax tree. Klik lagi untuk menghapus sorotan.</span>
+      </div>
+      <div id="followpos-table" class="table-scroll">
+        <p class="empty">Belum ada tabel.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. DFA -->
+  <section class="module module--roomy" id="dfa">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">LANGKAH 4</span>
+        <h2>Tabel dan diagram DFA</h2>
+        <span class="hint">Satu tabel memuat identitas state dan transisinya. State diberi label dari <code>firstpos(root)</code>; state yang memuat posisi penanda <code>#</code> bersifat menerima.</span>
+      </div>
+
+      <div class="legend">
+        <span><i class="swatch"></i> State biasa</span>
+        <span><i class="swatch swatch--accept"></i> State penerima</span>
+        <span>Label ganda: <code>N</code> nama state, himpunan posisi di bawahnya.</span>
+      </div>
+
+      <div class="dfa-switch" id="dfa-switch" role="group" aria-label="Pilih automaton yang ditampilkan">
+        <button type="button" class="switch-btn is-selected" data-view="raw" aria-pressed="true">Hasil langsung</button>
+        <button type="button" class="switch-btn" data-view="min" aria-pressed="false">DFA minimum</button>
+        <span class="switch-note" id="dfa-switch-note"></span>
+      </div>
+
+      <div class="minimize-steps" id="minimize-steps" hidden>
+        <div class="minimize-head">
+          <strong>Langkah minimisasi</strong>
+          <span class="switch-note" id="minimize-label"></span>
+          <div class="minimize-buttons">
+            <button type="button" class="switch-btn" id="minimize-prev">Sebelumnya</button>
+            <button type="button" class="switch-btn" id="minimize-next">Berikutnya</button>
+          </div>
+        </div>
+        <ol class="minimize-groups" id="minimize-groups"></ol>
+      </div>
+
+      <div id="dfa-tables"></div>
+
+      <p class="note note--warn" id="position-note" hidden></p>
+
+      <div id="dfa-canvas" class="canvas" style="margin-top:18px">
+        <p class="empty">Belum ada diagram.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Simulator -->
+  <section class="module" id="simulator">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">LANGKAH 5</span>
+        <h2>Simulator string</h2>
+        <span class="hint">Penelusuran mengikuti transisi dari state awal. Klik salah satu langkah untuk menyorot state-nya di diagram.</span>
+      </div>
+
+      <form id="sim-form" class="sim-row">
+        <label class="visually-hidden" for="sim-input">String uji</label>
+        <input id="sim-input" class="input-re" type="text" autocomplete="off" spellcheck="false"
+               placeholder="contoh: aabb" aria-describedby="sim-output">
+        <button type="submit" class="btn btn--primary">Uji string</button>
+      </form>
+
+      <div id="sim-output" class="sim-output" aria-live="polite">
+        <p class="empty">Jalankan konversi lebih dahulu, lalu uji sebuah string.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Metode -->
+  <section class="module" id="metode">
+    <div class="wrap">
+      <div class="module-head">
+        <span class="step-no">REFERENSI</span>
+        <h2>Aturan yang dipakai</h2>
+      </div>
+
+      <dl class="method">
+        <div>
+          <dt>Preprocessing</dt>
+          <dd>Konkatenasi eksplisit disisipkan pada pasangan operand berurutan, lalu ekspresi diaugmentasi menjadi <code>(r)•#</code>. Penanda <code>#</code> menutup pohon dan menandai state penerima.</dd>
+
+          <dt>nullable, firstpos, lastpos</dt>
+          <dd>Daun: <code>nullable = false</code>, <code>firstpos = lastpos = {i}</code>. Or menggabungkan kedua anak. Cat memakai anak kanan hanya bila anak kiri nullable, dan sebaliknya untuk lastpos. Star selalu nullable dan mewarisi himpunan anaknya.</dd>
+
+          <dt>followpos</dt>
+          <dd>Pada node cat, setiap posisi di <code>lastpos</code> anak kiri menerima seluruh <code>firstpos</code> anak kanan. Pada node star, setiap posisi di <code>lastpos</code> badan menerima seluruh <code>firstpos</code> badan. Tidak ada aturan lain.</dd>
+        </div>
+        <div>
+          <dt>Konstruksi DFA</dt>
+          <dd>State awal adalah <code>firstpos(root)</code>. Untuk tiap state dan tiap simbol alfabet, gabungkan <code>followpos</code> dari posisi yang memuat simbol itu; gabungan tak kosong menjadi transisi dan, bila baru, menjadi state berikutnya. State yang memuat posisi <code>#</code> bersifat menerima.</dd>
+
+          <dt>Batas rilis ini</dt>
+          <dd>Konstruksi langsung tidak menjamin jumlah state minimum, jadi minimisasi DFA belum termasuk. Sintaks epsilon, escape operator, dan larangan simbol <code>#</code> serta <code>•</code> sebagai input masih menunggu keputusan pada <code>spec.md</code>.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

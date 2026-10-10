@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang='en' class='scroll-smooth'>
+<head>
+
+<!-- __CANVAS_HEAD_READY_SHIM__ -->
+<script>
+(function() {
+  // 1. Bulletproof DOMContentLoaded shim for iframe previews:
+  // If the document is already interactive or complete, invoke listeners immediately.
+  var origAdd = document.addEventListener;
+  document.addEventListener = function(type, listener, options) {
+    if (type === 'DOMContentLoaded' && (document.readyState === 'interactive' || document.readyState === 'complete')) {
+      setTimeout(function() {
+        try {
+          if (typeof listener === 'function') {
+            listener.call(document, new Event('DOMContentLoaded'));
+          } else if (listener && typeof listener.handleEvent === 'function') {
+            listener.handleEvent(new Event('DOMContentLoaded'));
+          }
+        } catch (err) {
+          console.error('DOMContentLoaded listener error:', err);
+        }
+      }, 0);
+      return;
+    }
+    return origAdd.call(document, type, listener, options);
+  };
+
+  // 2. Lucide Icons auto-observer: guarded against recursive DOM mutation loops
+  var isRunningLucide = false;
+  function runLucide() {
+    if (isRunningLucide) return;
+    if (typeof window.lucide !== 'undefined' && typeof window.lucide.createIcons === 'function') {
+      var unrendered = document.querySelectorAll('i[data-lucide]');
+      if (unrendered.length === 0) return;
+      isRunningLucide = true;
+      try { window.lucide.createIcons(); } catch {}
+      finally {
+        setTimeout(function() { isRunningLucide = false; }, 60);
+      }
+    }
+  }
+  window.addEventListener('load', runLucide);
+  setTimeout(runLucide, 100);
+  setTimeout(runLucide, 400);
+  setTimeout(runLucide, 1000);
+
+  // Watch for any dynamic innerHTML changes (e.g. app.js rendering tables) with strict debounce & check
+  if (typeof MutationObserver !== 'undefined') {
+    var lucideTimer = null;
+    var obs = new MutationObserver(function() {
+      if (isRunningLucide) return;
+      if (document.querySelectorAll('i[data-lucide]').length === 0) return;
+      clearTimeout(lucideTimer);
+      lucideTimer = setTimeout(runLucide, 60);
+    });
+    if (document.documentElement) {
+      obs.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  }
+})();
+</script>
+
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Hemory — Persistent Ambient Memory for AI Agents</title>
+  
+  <!-- Inter & Geist font family -->
+  <link rel='preconnect' href='https://fonts.googleapis.com'>
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+  <link href='https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap' rel='stylesheet'>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src='https://cdn.tailwindcss.com'></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#C85A32',
+              hover: '#B34E2A',
+              subtle: '#F6EAE4'
+            },
+            canvas: '#F7F6F2',
+            surface: {
+              DEFAULT: '#FFFFFF',
+              subtle: '#EFECE6'
+            },
+            ink: {
+              primary: '#121212',
+              secondary: '#71717A',
+              tertiary: '#A1A1AA'
+            },
+            outline: '#E5E2DC'
+          },
+          fontFamily: {
+            sans: ['Geist', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          letterSpacing: {
+            tighter: '-0.035em',
+            tight: '-0.02em',
+            eyebrow: '0.12em'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src='https://unpkg.com/lucide@latest/dist/umd/lucide.min.js'></script>
+</head>
+<body class='bg-canvas text-ink-primary font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brand selection:text-white'>
+
+  <!-- HEADER / NAVBAR -->
+  <header class='sticky top-0 z-40 w-full bg-canvas/90 backdrop-blur-md border-b border-outline transition-all'>
+    <div class='max-w-[1360px] mx-auto px-6 sm:px-10 h-20 flex items-center justify-between'>
+      
+      <!-- Brand Logo -->
+      <a href='#' class='flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-md p-1'>
+        <div class='flex items-end gap-[3px] h-5 w-5 pb-0.5'>
+          <span class='w-1 h-2.5 bg-ink-primary rounded-full transition-all group-hover:h-4 group-hover:bg-brand'></span>
+          <span class='w-1 h-4 bg-ink-primary rounded-full transition-all group-hover:h-3 group-hover:bg-brand'></span>
+          <span class='w-1 h-3 bg-ink-primary rounded-full transition-all group-hover:h-5 group-hover:bg-brand'></span>
+        </div>
+        <span class='font-semibold text-xl tracking-tight text-ink-primary'>Hemory</span>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class='hidden md:flex items-center gap-8 text-[14px] font-normal text-ink-secondary'>
+        <a href='#features' class='hover:text-ink-primary transition-colors'>Home</a>
+        <a href='#features' class='hover:text-ink-primary transition-colors'>Features</a>
+        <a href='#pricing' class='hover:text-ink-primary transition-colors'>Pricing</a>
+        <a href='#docs' class='hover:text-ink-primary transition-colors'>Docs</a>
+        <a href='#blog' class='hover:text-ink-primary transition-colors'>Blog</a>
+        <a href='#about' class='hover:text-ink-primary transition-colors'>About</a>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class='flex items-center gap-5'>
+        <a href='#' class='hidden sm:inline-block text-[14px] font-medium text-ink-primary hover:text-brand transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded px-2 py-1'>
+          Log in
+        </a>
+        
+        <!-- Mobile menu toggle button -->
+        <button id='mobile-menu-btn' type='button' aria-label='Toggle navigation menu' class='md:hidden p-2 text-ink-primary hover:text-brand transition-colors rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand'>
+          <i data-lucide='menu' stroke-width='2.5' class='w-5 h-5'></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <aside id='mobile-sidebar' class='fixed inset-y-0 right-0 z-50 w-72 bg-surface shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out border-l border-outline flex flex-col justify-between p-6 md:hidden'>
+    <div class='flex flex-col gap-6'>
+      <div class='flex items-center justify-between pb-4 border-b border-outline'>
+        <span class='font-semibold text-lg text-ink-primary'>Navigation</span>
+        <button id='mobile-close-btn' type='button' aria-label='Close menu' class='p-1.5 text-ink-secondary hover:text-ink-primary rounded-lg'>
+          <i data-lucide='x' stroke-width='2.5' class='w-5 h-5'></i>
+        </button>
+      </div>
+      <nav class='flex flex-col gap-4 text-base font-medium text-ink-secondary'>
+        <a href='#features' class='mobile-nav-link hover:text-brand transition-colors py-1'>Home</a>
+        <a href='#features' class='mobile-nav-link hover:text-brand transition-colors py-1'>Features</a>
+        <a href='#pricing' class='mobile-nav-link hover:text-brand transition-colors py-1'>Pricing</a>
+        <a href='#docs' class='mobile-nav-link hover:text-brand transition-colors py-1'>Docs</a>
+        <a href='#blog' class='mobile-nav-link hover:text-brand transition-colors py-1'>Blog</a>
+        <a href='#about' class='mobile-nav-link hover:text-brand transition-colors py-1'>About</a>
+      </nav>
+    </div>
+    <div class='pt-6 border-t border-outline flex flex-col gap-3'>
+      <a href='#' class='w-full py-2.5 text-center text-sm font-medium text-ink-primary border border-outline rounded-lg hover:bg-surface-subtle transition-colors'>Log in</a>
+      <a href='#' class='w-full py-2.5 text-center text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors'>Get Hemory</a>
+    </div>
+  </aside>
+  <div id='mobile-overlay' class='fixed inset-0 z-40 bg-black/30 backdrop-blur-xs hidden pointer-events-none'></div>
+
+  <!-- MAIN HERO SECTION -->
+  <main class='flex-grow flex flex-col justify-center max-w-[1360px] mx-auto px-6 sm:px-10 pt-16 pb-20 w-full'>
+    
+    <div class='w-full'>
+      <!-- Eyebrow Tag -->
+      <div class='mb-8 sm:mb-10'>
+        <span class='font-mono text-[11px] sm:text-[12px] font-semibold text-ink-secondary tracking-eyebrow uppercase'>
+          INTRODUCING — HEMORY
+        </span>
+      </div>
+
+      <!-- Main Display Headline (Split Two-Tone) -->
+      <h1 class='text-4xl sm:text-6xl md:text-7xl lg:text-[82px] font-semibold tracking-tighter leading-[1.03] max-w-[1180px]'>
+        <span class='text-ink-primary block'>Hemory listens,</span>
+        <span class='text-ink-primary block'>always on —</span>
+        <span class='text-ink-secondary block mt-1 sm:mt-2'>wiring real memory</span>
+        <span class='text-ink-secondary block'>into your agents</span>
+      </h1>
+
+      <!-- Subheadline and Call-to-Action Group -->
+      <div class='mt-14 sm:mt-20 pt-8 sm:pt-10 border-t border-outline/80 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start'>
+        
+        <!-- Left: Mission / Subcopy -->
+        <div class='lg:col-span-6 xl:col-span-6'>
+          <p class='text-base sm:text-[17px] text-ink-secondary leading-relaxed max-w-[500px]'>
+            Everything you live through settles into a private, searchable memory — connected to your agents over MCP, unleashing memory's full potential.
+          </p>
+        </div>
+
+        <!-- Right: Action CTAs and Compatibility Footnote -->
+        <div class='lg:col-span-6 xl:col-span-6 flex flex-col items-start lg:items-end justify-start'>
+          
+          <!-- Primary & Secondary CTA Cluster -->
+          <div class='flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto'>
+            <!-- Primary CTA Button -->
+            <button id='cta-primary-btn' type='button' class='group relative inline-flex items-center justify-center gap-2.5 bg-brand hover:bg-brand-hover text-white text-[14px] font-medium px-6 py-3.5 rounded-lg active:scale-95 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2'>
+              <span>Get Hemory</span>
+              <i data-lucide='arrow-up-right' stroke-width='2.5' class='w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5'></i>
+            </button>
+
+            <!-- Secondary CTA Button -->
+            <button id='cta-secondary-btn' type='button' class='group inline-flex items-center justify-center gap-2.5 bg-transparent hover:bg-surface-subtle text-ink-primary border border-outline text-[14px] font-medium px-6 py-3.5 rounded-lg active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-primary'>
+              <span>See How It Works</span>
+              <i data-lucide='arrow-up-right' stroke-width='2.5' class='w-4 h-4 text-ink-secondary group-hover:text-ink-primary transition-colors'></i>
+            </button>
+          </div>
+
+          <!-- Compatibility Notes -->
+          <div class='mt-5 flex flex-col lg:items-end text-left lg:text-right'>
+            <div class='flex items-center gap-2 text-[13px] font-semibold text-ink-primary'>
+              <span class='inline-block w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse'></span>
+              <span>iOS</span>
+              <span class='text-ink-tertiary'>•</span>
+              <span>Android</span>
+            </div>
+            <p class='text-[12px] text-ink-secondary mt-1 font-normal'>
+              macOS, Windows, Linux, Web and Self-host coming soon
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Live Ambient Simulation Card (Interactive Demo Preview) -->
+    <section class='mt-16 pt-8 border-t border-outline/50'>
+      <div class='bg-surface border border-outline rounded-xl p-6 sm:p-8 relative overflow-hidden transition-all hover:border-brand/40'>
+        
+        <!-- Subtle Top Metadata Bar -->
+        <div class='flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-outline/70'>
+          <div class='flex items-center gap-3'>
+            <div class='w-2.5 h-2.5 rounded-full bg-brand animate-ping'></div>
+            <span class='font-mono text-xs font-medium text-ink-secondary tracking-wider uppercase'>LIVE AMBIENT PIPELINE — MCP PROTOCOL ACTIVE</span>
+          </div>
+          <div class='flex items-center gap-3 text-xs'>
+            <span class='px-2.5 py-1 bg-surface-subtle text-ink-primary rounded-md font-mono border border-outline'>AES-256 ENCRYPTED</span>
+            <span class='px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-md font-mono border border-emerald-200 flex items-center gap-1.5'>
+              <span class='w-1.5 h-1.5 rounded-full bg-emerald-600'></span> ZERO DATA RETENTION ON CLOUD
+            </span>
+          </div>
+        </div>
+
+        <!-- Simulation Grid: Real-time Memory Indexing -->
+        <div class='grid grid-cols-1 md:grid-cols-3 gap-6 pt-6'>
+          
+          <!-- Column 1: Captured Stream -->
+          <div class='flex flex-col gap-2'>
+            <span class='text-[11px] font-mono text-ink-secondary tracking-wider uppercase'>01. AMBIENT CAPTURE</span>
+            <div class='bg-canvas rounded-lg p-3.5 border border-outline text-xs text-ink-primary leading-relaxed font-mono'>
+              "Let's migrate the vector index to sqlite-vec before deploying the Claude tool calling test on Tuesday."
+            </div>
+            <span class='text-[11px] text-ink-tertiary'>Captured 4 mins ago via iOS background mic</span>
+          </div>
+
+          <!-- Column 2: Vector Embedding & MCP Relay -->
+          <div class='flex flex-col gap-2'>
+            <span class='text-[11px] font-mono text-ink-secondary tracking-wider uppercase'>02. CONTEXT SYNTHESIS</span>
+            <div class='bg-canvas rounded-lg p-3.5 border border-outline text-xs text-ink-primary font-mono flex flex-col gap-1.5'>
+              <div class='flex items-center justify-between text-ink-secondary'>
+                <span>Entity: sqlite-vec migration</span>
+                <span class='text-brand font-semibold'>Rank 0.98</span>
+              </div>
+              <div class='flex items-center justify-between text-ink-secondary'>
+                <span>Target Date: Tuesday next week</span>
+                <span class='text-brand font-semibold'>High urgency</span>
+              </div>
+            </div>
+            <span class='text-[11px] text-ink-tertiary'>Synthesized into private on-device graph</span>
+          </div>
+
+          <!-- Column 3: Injected Agent Response -->
+          <div class='flex flex-col gap-2'>
+            <span class='text-[11px] font-mono text-ink-secondary tracking-wider uppercase'>03. AGENT RECALL OVER MCP</span>
+            <div class='bg-canvas rounded-lg p-3.5 border border-outline text-xs text-ink-primary font-mono'>
+              <span class='text-brand font-medium'>Claude Code:</span> "I noticed you scheduled sqlite-vec migration for Tuesday. Would you like me to prepare the schema bridge script now?"
+            </div>
+            <span class='text-[11px] text-ink-tertiary'>Zero explicit prompts needed by user</span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM INTEGRATION ECOSYSTEM TICKER -->
+  <footer class='w-full border-t border-outline bg-canvas py-8 transition-colors'>
+    <div class='max-w-[1360px] mx-auto px-6 sm:px-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6'>
+      
+      <!-- Left Category Title -->
+      <div class='flex items-center gap-3 shrink-0'>
+        <span class='font-mono text-[11px] font-semibold text-ink-secondary tracking-wider uppercase'>WORKS WITH</span>
+        <span class='text-outline'>|</span>
+      </div>
+
+      <!-- Integrated Tool Badges & Names -->
+      <div class='flex flex-wrap items-center gap-x-8 gap-y-3 text-xs sm:text-sm font-medium text-ink-secondary'>
+        
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='terminal' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          Claude Code
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='cpu' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          Codex
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='sparkles' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          Gemini
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='mouse-pointer-click' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          Cursor
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='code-2' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          VS Code
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='layers' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          OpenClaw
+        </span>
+
+        <span class='flex items-center gap-2 hover:text-ink-primary transition-colors cursor-pointer'>
+          <i data-lucide='shield-check' stroke-width='2.5' class='w-3.5 h-3.5 text-brand'></i>
+          Hermes
+        </span>
+
+        <span class='inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-surface-subtle text-ink-primary border border-outline'>
+          Standard MCP Clients
+        </span>
+      </div>
+
+      <!-- Quick Platform Status indicator -->
+      <div class='shrink-0 flex items-center gap-2 text-xs text-ink-secondary'>
+        <span class='w-2 h-2 rounded-full bg-emerald-500'></span>
+        <span>Protocol v1.4.0 Online</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Modal Dialog: Interactive Waitlist / Access Modal -->
+  <div id='access-modal' class='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs hidden '>
+    <div class='bg-surface border border-outline rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative'>
+      <button id='close-modal-btn' type='button' aria-label='Close access modal' class='absolute top-5 right-5 p-1.5 text-ink-secondary hover:text-ink-primary rounded-lg transition-colors'>
+        <i data-lucide='x' stroke-width='2.5' class='w-5 h-5'></i>
+      </button>
+
+      <div class='flex items-center gap-2.5 text-brand mb-2'>
+        <i data-lucide='key-round' stroke-width='2.5' class='w-5 h-5'></i>
+        <span class='font-mono text-xs font-semibold tracking-wider uppercase'>Early Developer Access</span>
+      </div>
+      
+      <h3 class='text-2xl font-semibold text-ink-primary tracking-tight'>Get Early Access to Hemory</h3>
+      <p class='text-sm text-ink-secondary mt-2 leading-relaxed'>
+        Join developers building persistent memory pipelines over MCP. We will send you an invite and on-device setup guide.
+      </p>
+
+      <form id='access-form' class='mt-6 flex flex-col gap-4'>
+        <div>
+          <label for='user-email' class='block text-xs font-medium text-ink-secondary uppercase tracking-wider mb-1.5'>Your Work or Personal Email</label>
+          <input id='user-email' type='email' required placeholder='name@domain.com' class='w-full px-3.5 py-2.5 text-sm bg-canvas border border-outline rounded-lg text-ink-primary placeholder:text-ink-tertiary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors'>
+        </div>
+
+        <div>
+          <label for='primary-agent' class='block text-xs font-medium text-ink-secondary uppercase tracking-wider mb-1.5'>Primary AI Agent Used</label>
+          <select id='primary-agent' class='w-full px-3.5 py-2.5 text-sm bg-canvas border border-outline rounded-lg text-ink-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors'>
+            <option value='cursor'>Cursor / Windsurf</option>
+            <option value='claude'>Claude Code</option>
+            <option value='custom'>Custom MCP Agent Architecture</option>
+            <option value='other'>Other</option>
+          </select>
+        </div>
+
+        <button type='submit' class='mt-2 w-full py-3 bg-brand hover:bg-brand-hover text-white text-sm font-medium rounded-lg active:scale-95 transition-all shadow-sm'>
+          Request MCP Endpoint Key
+        </button>
+
+        <p class='text-[11px] text-center text-ink-tertiary'>
+          We respect privacy: Zero telemetry is sent without explicit user opt-in.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vanilla JS Interactivity -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Mobile Sidebar Drawer Elements
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileCloseBtn = document.getElementById('mobile-close-btn');
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+    function openMobileMenu() {
+      mobileSidebar.classList.remove('translate-x-full');
+      mobileSidebar.classList.add('translate-x-0');
+      mobileOverlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileMenu() {
+      mobileSidebar.classList.remove('translate-x-0');
+      mobileSidebar.classList.add('translate-x-full');
+      mobileOverlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileMenu);
+    if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeMobileMenu);
+    if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
+    mobileLinks.forEach(link => link.addEventListener('click', closeMobileMenu));
+
+    // Access Modal Elements & Handlers
+    const ctaPrimaryBtn = document.getElementById('cta-primary-btn');
+    const ctaSecondaryBtn = document.getElementById('cta-secondary-btn');
+    const accessModal = document.getElementById('access-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const accessForm = document.getElementById('access-form');
+
+    function openModal() {
+      if (accessModal) {
+        accessModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeModal() {
+      if (accessModal) {
+        accessModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    }
+
+    if (ctaPrimaryBtn) ctaPrimaryBtn.addEventListener('click', openModal);
+    if (ctaSecondaryBtn) ctaSecondaryBtn.addEventListener('click', () => {
+      // Smooth scroll to demo preview or open modal
+      const preview = document.querySelector('section');
+      if (preview) {
+        preview.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+    if (accessModal) {
+      accessModal.addEventListener('click', (e) => {
+        if (e.target === accessModal) closeModal();
+      });
+    }
+
+    if (accessForm) {
+      accessForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const submitBtn = accessForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.innerHTML = 'Key Requested ✓';
+          submitBtn.classList.remove('bg-brand');
+          submitBtn.classList.add('bg-emerald-600');
+          setTimeout(() => {
+            closeModal();
+            submitBtn.innerHTML = 'Request MCP Endpoint Key';
+            submitBtn.classList.add('bg-brand');
+            submitBtn.classList.remove('bg-emerald-600');
+            accessForm.reset();
+          }, 1400);
+        }
+      });
+    }
+
+    // Keyboard ESC listener for modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeMobileMenu();
+      }
+    });
+  </script>
+
+<!-- __CANVAS_INTERACTIVITY_HELPER__ -->
+<script>
+(function() {
+  function initInteractivity() {
+    // 1. Mobile Menu / Sidebar toggles
+    var menuTriggers = document.querySelectorAll(
+      '[data-toggle="sidebar"], [data-toggle="mobile-menu"], [data-toggle="menu"], ' +
+      '#mobile-menu-btn, #mobile-menu-button, #menu-btn, #hamburger, [data-menu-toggle]'
+    );
+    var menuTargets = document.querySelectorAll(
+      '#mobile-sidebar, #mobile-menu, #mobile-nav, [data-menu-target], aside[id*="sidebar"]'
+    );
+    var overlays = document.querySelectorAll('#mobile-overlay, [data-menu-overlay]');
+
+    if (menuTriggers.length > 0 && menuTargets.length > 0) {
+      menuTriggers.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          menuTargets.forEach(function(target) {
+            if (target.classList.contains('-translate-x-full')) {
+              target.classList.remove('-translate-x-full');
+              target.classList.add('translate-x-0');
+            } else if (target.classList.contains('translate-x-0')) {
+              target.classList.remove('translate-x-0');
+              target.classList.add('-translate-x-full');
+            } else {
+              target.classList.toggle('hidden');
+            }
+          });
+          overlays.forEach(function(ov) {
+            ov.classList.toggle('hidden');
+          });
+        });
+      });
+
+      overlays.forEach(function(ov) {
+        ov.addEventListener('click', function() {
+          menuTargets.forEach(function(target) {
+            target.classList.add('-translate-x-full');
+            target.classList.remove('translate-x-0');
+            target.classList.add('hidden');
+          });
+          ov.classList.add('hidden');
+        });
+      });
+    }
+
+    // 2. Generic data-toggle target
+    document.querySelectorAll('[data-toggle]').forEach(function(el) {
+      var targetSelector = el.getAttribute('data-target') || el.getAttribute('data-toggle');
+      if (!targetSelector || targetSelector === 'sidebar' || targetSelector === 'mobile-menu') return;
+      var target = document.querySelector(targetSelector) || document.getElementById(targetSelector);
+      if (target) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          target.classList.toggle('hidden');
+        });
+      }
+    });
+
+    // 3. Accordions / FAQ toggles
+    document.querySelectorAll('[data-accordion-target], .accordion-trigger, [aria-expanded]').forEach(function(trigger) {
+      trigger.addEventListener('click', function() {
+        var isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+        trigger.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+        var targetSelector = trigger.getAttribute('data-accordion-target') || trigger.getAttribute('aria-controls');
+        var content = targetSelector ? document.querySelector(targetSelector) : trigger.nextElementSibling;
+        if (content) {
+          content.classList.toggle('hidden');
+        }
+      });
+    });
+
+    // 4. Modal & Dialog visibility-synced interactivity: an invisible
+    // (opacity: 0) full-screen modal/dialog backdrop must NEVER intercept
+    // clicks meant for the page behind it. Extremely common AI-generated
+    // pattern: a `fixed inset-0 ... opacity-0` backdrop toggled to
+    // opacity-100 by the page's own JS on open, with NO pointer-events
+    // management of its own (relying solely on opacity to "hide" it,
+    // which hides it visually but NOT from hit-testing/click interception
+    // — a plain CSS fact independent of any script here). The old version
+    // of this safeguard unconditionally forced pointer-events:auto on
+    // every match, ONE TIME, at load — confirmed real: on a closed
+    // `#checkout-modal` (opacity-0, fixed inset-0 z-50, no
+    // pointer-events-none to begin with) this made an invisible,
+    // full-viewport div intercept EVERY click on the page behind it,
+    // including Canvas pick-mode element selection. Sync each match's
+    // OWN pointer-events (and its interactive descendants') to its LIVE
+    // computed visibility instead — 'none' while invisible, 'auto' once
+    // shown — and re-sync whenever its class/style changes, so opening
+    // the modal (which only ever toggles opacity/scale classes) also
+    // correctly re-enables it, and a stuck pointer-events-none on an
+    // ALREADY-visible modal (the original bug this safeguard was written
+    // for) still gets cleared via the inline style override.
+    //
+    // Visibility MUST be ancestor-aware, not own-opacity-only. Confirmed
+    // real: the selector below matches NESTED nodes too (e.g.
+    // `#checkout-modal-card` inside `#checkout-modal`, plus every
+    // `[class*="modal"]` descendant). A nested card keeps its own
+    // `opacity: 1` while the ANCESTOR backdrop is at `opacity: 0`, so an
+    // own-opacity test called it "visible" and re-forced pointer-events:auto
+    // on it — and on its inner buttons — making a hit target spanning the
+    // middle of the viewport out of a modal nobody could see. That is the
+    // post-revise "buttons become unclickable / handlers never fire" bug.
+    // `isElementVisible` walks ancestors (opacity/display/visibility) so
+    // nested matches inherit their backdrop's invisibility. The ancestor
+    // walk runs FIRST and unconditionally: inlining an ancestor's opacity
+    // into a single own-node check is exactly the bug above, and
+    // `checkVisibility`'s own ancestor handling differs between engines,
+    // so it is only used afterwards as an extra signal for
+    // `content-visibility: hidden` subtrees. `contentVisibilityAuto` is
+    // deliberately NOT passed: `content-visibility: auto` makes
+    // `checkVisibility` report an off-screen element as invisible, and
+    // nothing here re-syncs on SCROLL (every trigger below is a class/style
+    // mutation or a transition end), so that would pin an off-screen modal
+    // branch to pointer-events:none and leave it stuck once scrolled into
+    // view — the same class of stuck-interactivity state this whole
+    // safeguard exists to prevent. Plain `content-visibility: hidden` is
+    // static, so it carries no such risk.
+    function isElementVisible(el) {
+      var node = el;
+      while (node && node.nodeType === 1) {
+        var style = window.getComputedStyle(node);
+        if (style.opacity === '0' || style.display === 'none' || style.visibility === 'hidden') {
+          return false;
+        }
+        node = node.parentElement;
+      }
+      if (typeof el.checkVisibility === 'function') {
+        try {
+          return el.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+        } catch {}
+      }
+      return true;
+    }
+    // Never write an unchanged value: this same function is driven by
+    // MutationObservers (below), and a redundant write would re-trigger the
+    // observer that called it, for no state change.
+    function setPointerEvents(el, value) {
+      if (el.style.pointerEvents !== value) el.style.pointerEvents = value;
+    }
+    function syncModalPointerEvents(modal) {
+      var visible = isElementVisible(modal);
+      setPointerEvents(modal, visible ? 'auto' : 'none');
+      modal.querySelectorAll('input, select, textarea, button, form, .bg-card').forEach(function(el) {
+        setPointerEvents(el, visible ? 'auto' : 'none');
+      });
+    }
+    // Re-sync a match AND every nested match: the selector below matches
+    // both a backdrop (`#checkout-modal`) and cards nested inside it
+    // (`#checkout-modal-card`). A nested match's own inline pointer-events
+    // only goes stale when its own class/style does not change while the
+    // ANCESTOR's does — opening/closing a modal that toggles the card's
+    // scale classes together with the backdrop's opacity is covered, but
+    // the Canvas live-patching the document after an AI revision is not,
+    // and a stale `auto` there keeps an invisible card intercepting clicks
+    // in the middle of the viewport (confirmed live: card inline
+    // `pointer-events: auto` next to a closed `#checkout-modal`). So a
+    // backdrop's re-sync also fixes everything nested inside it.
+    var MODAL_SELECTOR = '[id*="modal"], [id*="dialog"], [class*="modal"], [class*="dialog"]';
+    function resyncModalBranch(modal) {
+      syncModalPointerEvents(modal);
+      modal.querySelectorAll(MODAL_SELECTOR).forEach(syncModalPointerEvents);
+    }
+    function sweepModalPointerEvents() {
+      document.querySelectorAll(MODAL_SELECTOR).forEach(resyncModalBranch);
+    }
+    document.querySelectorAll(MODAL_SELECTOR).forEach(function(modal) {
+      syncModalPointerEvents(modal);
+      // The mutation-triggered check fires the instant a class/style
+      // change is MADE, not when it takes visual effect — for a
+      // `transition-opacity` modal (very common, e.g. `transition-opacity
+      // duration-200`), getComputedStyle().opacity at that exact instant
+      // can still read the STARTING value of the animation, not the
+      // target, so a fading-IN modal got read as "still invisible" and
+      // stuck at pointer-events:none. `transitionend` covers browsers
+      // that fire it reliably; the fixed re-checks below are a fallback
+      // net (mirrors this file's own Lucide-icon fix above, which uses
+      // the same fixed-delay-retry pattern for the same class of
+      // animation/timing-uncertainty problem) so this still converges
+      // even if a transition never completes or its end event is missed.
+      function resync() { resyncModalBranch(modal); }
+      if (typeof MutationObserver !== 'undefined') {
+        new MutationObserver(function() {
+          resync();
+          setTimeout(resync, 250);
+          setTimeout(resync, 600);
+        }).observe(modal, { attributes: true, attributeFilter: ['class', 'style'] });
+      }
+      modal.addEventListener('transitionend', function(e) {
+        if (e.propertyName === 'opacity') resync();
+      });
+    });
+
+    // Document-level safety net for the case no per-match observer can see:
+    // the Canvas replaces a section wholesale (after an AI revision, or on
+    // the user typing in the code editor) without mutating the matched
+    // element's own attributes, leaving its inline pointer-events stale.
+    // Same debounced-observer shape as the Lucide observer in the head shim
+    // above — including its "nothing to do, bail out" guard — so it stays
+    // inert on documents without modals. The debounce also keeps the sweep
+    // off the mutation path of a class-heavy animation.
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      var modalSyncTimer = null;
+      new MutationObserver(function() {
+        if (document.querySelectorAll(MODAL_SELECTOR).length === 0) return;
+        clearTimeout(modalSyncTimer);
+        modalSyncTimer = setTimeout(sweepModalPointerEvents, 120);
+      }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+    }
+
+    // 5. Lucide icons fallback initialization if loaded
+    if (typeof window.lucide !== 'undefined' && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInteractivity);
+  } else {
+    initInteractivity();
+  }
+})();
+</script>
+
+</body>
+</html>

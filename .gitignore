@@ -1,0 +1,19 @@
+# Hasil build untuk deploy; dibuat ulang oleh scripts/prepare-public.mjs.
+public/
+
+# Netlify
+.netlify/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editor dan sistem operasi
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Berkas sementara
+*.tmp
+*.log

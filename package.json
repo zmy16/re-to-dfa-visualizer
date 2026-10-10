@@ -1,0 +1,12 @@
+{
+  "name": "re-to-dfa-visualizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Konversi langsung Regular Expression ke DFA via syntax tree dan followpos.",
+  "scripts": {
+    "test": "node --test tests/engine.test.js tests/equivalence.test.js tests/minimize.test.js tests/edge.test.js",
+    "serve": "node scripts/serve.mjs",
+    "build": "node scripts/prepare-public.mjs"
+  }
+}
