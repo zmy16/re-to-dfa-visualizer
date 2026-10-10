@@ -18,6 +18,12 @@
   command = "node scripts/prepare-public.mjs"
 
 # Berkas statis boleh di-cache lama karena setiap deploy menghasilkan URL baru.
+#
+# Tidak ada aturan redirect ke index.html di sini. Aplikasi ini hanya satu
+# halaman tanpa rute, jadi fallback itu tidak diperlukan. Menambahkannya justru
+# berbahaya: URL berkas yang tidak ada akan dibalas HTML dengan status 200,
+# sehingga scraper pratinjau tautan seperti WhatsApp menerima HTML sebagai
+# gambar dan menampilkan pratinjau yang rusak, bukan gagal dengan jelas.
 [[headers]]
   for = "/src/*"
   [headers.values]
@@ -34,8 +40,13 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Halaman satu berkas: rute tak dikenal dikembalikan ke index.html.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Gambar pratinjau tidak boleh di-cache lama oleh scraper tautan, supaya
+# perubahan gambar langsung terpakai saat tautan dibagikan ulang.
+[[headers]]
+  for = "/og-image.png"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+
+# Tidak ada aturan fallback ke index.html. Halaman ini tidak punya rute, dan
+# URL yang tidak ada dibiarkan gagal dengan 404 agar kesalahan seperti gambar
+# pratinjau yang hilang langsung terlihat, bukan tersamar sebagai HTML.

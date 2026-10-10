@@ -1,18 +1,13 @@
 // Membuat og-image.png (1200x630) untuk pratinjau tautan.
 //
-// Gambar dirender Chrome headless dari halaman HTML yang memakai modul ES
-// aplikasi (src/engine.js dan src/diagram.js). Pendekatan ini dipilih karena:
+// Kartunya digambar sebagai HTML lalu dirender Chrome headless. Isinya dibuat
+// dari data sungguhan: ekspresi, jumlah state, dan diagramnya dihitung oleh
+// kode yang sama dengan aplikasi (src/engine.js dan src/diagram.js), sehingga
+// angka pada kartu tidak pernah berbeda dari yang dilihat pengguna.
 //
-//  1. Font dan tema pasti sama dengan aplikasi, bukan tebakan gaya.
-//  2. Geometri diagram dihitung kode yang sama dengan yang dipakai aplikasi,
-//     jadi sisinya menempel dan labelnya tidak bertumpuk.
-//
-// Halaman disajikan lewat server HTTP sementara, karena browser memblokir modul
-// ES dari file:// akibat kebijakan CORS.
-//
-// Catatan penting: server dijalankan sebagai proses terpisah, bukan di dalam
-// proses Node yang sama. Bila server dan Chrome berjalan di satu proses,
-// keduanya saling menunggu dan prosesnya menggantung tanpa pernah selesai.
+// Halaman disajikan lewat server HTTP sementara karena browser memblokir modul
+// ES dari file://. Server dijalankan sebagai proses terpisah: bila server dan
+// Chrome berjalan di satu proses, keduanya saling menunggu dan menggantung.
 
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -35,8 +30,8 @@ if (!chrome) {
 const PORT = 4189;
 const HALAMAN = 'og-render.tmp.html';
 
-// Font mengikuti aplikasi: sistem sans untuk teks, ui-monospace untuk simbol
-// dan nama state. Gaya diagram disalin dari styles.css agar tampilannya identik.
+// Warna diambil dari styles.css agar kartu dan aplikasi memakai bahasa visual
+// yang sama: kanvas hangat, tinta gelap, satu aksen terracotta.
 const isi = `<!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8"><style>
   @page { margin: 0 }
@@ -46,47 +41,97 @@ const isi = `<!DOCTYPE html>
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     background: #F7F6F2;
     color: #121212;
-    position: relative;
+    padding: 26px;
   }
-  .grid {
-    position: absolute; inset: 0;
-    background-image: radial-gradient(#D4CFC7 1px, transparent 1px);
-    background-size: 22px 22px;
+  .card {
+    height: 100%;
+    border: 2px solid #121212;
+    border-radius: 16px;
+    background: #F7F6F2;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: #C85A32 }
-  .pad { position: relative; padding: 48px 72px }
-  h1 { font-size: 44px; font-weight: 650; letter-spacing: -0.02em }
-  .sub { margin-top: 10px; font-size: 20px; color: #66666E; max-width: 44ch; line-height: 1.4 }
-  .two { display: flex; gap: 40px; margin-top: 30px; align-items: flex-start }
-  .left { width: 480px; flex: none }
-  .label {
-    font-family: ui-monospace, Consolas, "Courier New", monospace;
-    font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #66666E;
+  /* Bilah atas: identitas alat di kiri, penanda status di kanan. */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 28px;
+    background: #1C1B19; color: #F7F6F2;
+  }
+  .top .title { display: flex; align-items: center; gap: 14px }
+  .mark {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: #C85A32; color: #fff;
+    display: grid; place-items: center;
+    font-family: ui-monospace, Consolas, monospace; font-size: 19px; font-weight: 700;
+  }
+  .top .name { font-size: 17px; font-weight: 650; letter-spacing: 0.02em }
+  .meta {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #A5A099;
+  }
+  .badge {
+    display: flex; align-items: center; gap: 9px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #E8BC77;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #7FC79B }
+
+  /* Bagian tengah: judul besar di kiri, diagram di kanan. */
+  .mid { flex: 1; display: flex; padding: 30px 28px 0; gap: 30px; min-height: 0 }
+  .left { width: 600px; flex: none; display: flex; flex-direction: column }
+  h1 {
+    font-size: 54px; line-height: 1.0; font-weight: 700; letter-spacing: -0.035em;
+  }
+  h1 .accent { color: #C85A32 }
+  .lead {
+    margin-top: 14px; font-size: 19px; line-height: 1.45; color: #55524C; max-width: 38ch;
   }
   .expr {
-    margin-top: 10px;
-    display: inline-block;
-    font-family: ui-monospace, Consolas, "Courier New", monospace;
-    font-size: 30px; font-weight: 650;
-    background: #fff; border: 1.5px solid #8A8277; border-radius: 8px;
-    padding: 10px 16px;
+    margin-top: 20px;
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 25px; font-weight: 650;
+    background: #fff; border: 1.5px solid #8A8277; border-radius: 9px;
+    padding: 8px 16px; width: fit-content;
   }
-  ol { margin-top: 26px; list-style: none; counter-reset: n }
-  li {
-    counter-increment: n;
-    font-size: 17px; line-height: 1.3; padding-left: 26px; position: relative;
-    margin-bottom: 10px; max-width: 38ch;
+  .expr .cmp { color: #66666E; font-weight: 400; font-size: 17px }
+  .expr .in { font-weight: 700 }
+  /* Kalimat penutup mengisi ruang bawah kolom kiri supaya tidak kosong. */
+  .note {
+    margin-top: auto; padding-bottom: 22px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 14px; color: #66666E; letter-spacing: 0.02em;
   }
-  li::before { content: counter(n); position: absolute; left: 0; top: 0; color: #C85A32; font-weight: 700 }
-  .right { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start }
-  /* Lebar dikunci 340px: pada 420px diagramnya terpotong tepi bawah kanvas. */
-  #diagram svg { display: block; width: 340px; height: auto; margin-top: 4px }
-  .caption {
-    margin-top: 8px;
-    font-family: ui-monospace, Consolas, "Courier New", monospace;
-    font-size: 13px; color: #66666E;
+  .right { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0 }
+  /* Diagram diberi bingkai tipis agar tidak tampak melayang di ruang kosong. */
+  #diagram {
+    border: 1.5px solid #D4CFC7; border-radius: 12px; background: #fff;
+    padding: 4px;
   }
+  #diagram svg { display: block; width: 330px; height: auto }
+
+  /* Baris statistik: angkanya dihitung dari hasil konversi sungguhan. */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: #1C1B19; color: #F7F6F2;
+  }
+  .stat { padding: 14px 22px; border-right: 1px solid #3A3833 }
+  .stat:last-child { border-right: none }
+  .stat .k {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #A5A099;
+  }
+  .stat .v {
+    margin-top: 4px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 25px; font-weight: 700; color: #C85A32;
+  }
+  .stat .v small { font-size: 14px; color: #A5A099; font-weight: 400; margin-left: 6px }
+
+  /* Gaya diagram disalin dari styles.css supaya tampilannya identik. */
   .state-circle { fill: #fff; stroke: #121212; stroke-width: 1.75 }
   .state-circle--accept-inner { fill: none; stroke: #121212; stroke-width: 1.75 }
   .state-group.is-accept .state-circle--accept-inner { stroke: #C85A32 }
@@ -99,51 +144,65 @@ const isi = `<!DOCTYPE html>
   .arrow-head { fill: #6E6A62 }
   .grid-dot { fill: #D4CFC7 }
 </style></head><body>
-  <div class="grid"></div>
-  <div class="bar"></div>
-  <div class="pad">
-    <h1>RE to DFA Visualizer</h1>
-    <p class="sub">Konversi Regular Expression ke DFA lewat syntax tree dan followpos, tanpa NFA perantara.</p>
+  <div class="card">
+    <div class="top">
+      <div class="title">
+        <div class="mark">ε</div>
+        <div class="name">RE to DFA Visualizer</div>
+      </div>
+      <div class="meta">Syntax tree &middot; followpos</div>
+      <div class="badge"><span class="dot"></span> Berjalan di peramban</div>
+    </div>
 
-    <div class="two">
+    <div class="mid">
       <div class="left">
-        <div class="label">Ekspresi</div>
-        <div class="expr">(a|b)*abb</div>
-        <ol>
-          <li>Syntax tree beranotasi firstpos dan lastpos</li>
-          <li>Tabel followpos dengan penjelasan tiap aturan</li>
-          <li>Tabel dan diagram DFA minimum</li>
-          <li>Simulator string langkah demi langkah</li>
-        </ol>
+        <h1>Regular expression <span class="accent">menjadi DFA</span>, tanpa NFA perantara.</h1>
+        <p class="lead">Setiap tahap perhitungan ditampilkan, dari syntax tree sampai tabel transisi.</p>
+        <div class="expr"><span class="cmp">Masukan</span> <span class="in" id="masukan"></span></div>
+        <div class="note" id="catatan"></div>
       </div>
       <div class="right">
-        <div class="label">DFA minimum</div>
         <div id="diagram"></div>
-        <div class="caption" id="caption"></div>
       </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">State minimum</div><div class="v" id="s-min"></div></div>
+      <div class="stat"><div class="k">Konstruksi langsung</div><div class="v" id="s-raw"></div></div>
+      <div class="stat"><div class="k">Posisi daun</div><div class="v" id="s-pos"></div></div>
+      <div class="stat"><div class="k">Alfabet</div><div class="v" id="s-alfa"></div></div>
     </div>
   </div>
   <script type="module">
     import { convert } from './src/engine.js';
     import { buildDiagramSvg } from './src/diagram.js';
 
-    const hasil = convert('(a|b)*abb');
-    const view = hasil.views.min;
-    document.getElementById('diagram').appendChild(buildDiagramSvg(view));
-    document.getElementById('caption').textContent =
-      view.states.length + ' state minimum dari ' + hasil.views.raw.states.length + ' state hasil konstruksi langsung';
+    const EXPRESI = '(a|b)*ab(a|b)*';
+    const hasil = convert(EXPRESI);
+    const min = hasil.views.min;
+    const raw = hasil.views.raw;
+
+    document.getElementById('masukan').textContent = EXPRESI;
+    document.getElementById('diagram').appendChild(buildDiagramSvg(min));
+    document.getElementById('s-min').textContent = min.states.length;
+    document.getElementById('s-raw').innerHTML = raw.states.length + '<small>state</small>';
+    document.getElementById('s-pos').innerHTML = hasil.leaves.length + '<small>posisi</small>';
+    document.getElementById('s-alfa').innerHTML = hasil.alphabet.length + '<small>simbol</small>';
+
+    // Kalimat ini dihitung dari data, bukan ditulis tetap, supaya tidak pernah
+    // berbeda dari kenyataan. Kalau tidak ada penghematan, bunyinya berubah.
+    document.getElementById('catatan').textContent = min.states.length < raw.states.length
+      ? 'Minimisasi menggabungkan ' + raw.states.length + ' state konstruksi langsung menjadi ' + min.states.length + ' state.'
+      : 'Konstruksi langsung sudah menghasilkan DFA minimum: ' + min.states.length + ' state.';
   </script>
 </body></html>`;
 
 fs.writeFileSync(HALAMAN, isi);
 
-// Server dijalankan sebagai proses terpisah lewat scripts/serve.mjs.
 const server = spawn(process.execPath, ['scripts/serve.mjs'], {
   env: { ...process.env, PORT: String(PORT) },
   stdio: 'ignore',
 });
-
-// Beri waktu server siap sebelum Chrome diminta membuka halaman.
 await new Promise((selesai) => setTimeout(selesai, 1200));
 
 try {
