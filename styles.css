@@ -503,12 +503,24 @@ td.is-position-match { color: var(--accent); font-weight: 650; }
   .masthead-actions { margin-left: auto; }
   .btn { min-height: 44px; }
   .theme-btn { width: 44px; height: 44px; }
-  /* Chip preset dibuat ringkas. Jarak antar chip yang menjaga ketepatan sentuh,
-     bukan tinggi atau lebar kotaknya. */
-  .chip { min-height: 30px; padding: 4px 9px; font-size: 0.75rem; }
-  .presets { gap: 8px 6px; margin-top: 12px; }
+  /* Chip preset dirapatkan. Tingginya tetap 30px (ketepatan sentuh dijaga
+     jarak antar chip), yang dikurangi padding dan jarak vertikalnya supaya
+     sembilan chip tidak memakan tinggi berlebihan di layar sempit. */
+  .chip { min-height: 30px; padding: 4px 8px; font-size: 0.75rem; }
+  .presets { gap: 6px; margin-top: 10px; }
   .link-btn { min-height: 40px; min-width: 40px; padding: 2px 10px; }
   .input-re { min-height: 44px; font-size: 16px; } /* 16px mencegah zoom otomatis di iOS */
+
+  /* Baris form dipecah jadi dua: kolom input satu baris penuh, lalu kedua
+     tombol berdampingan di bawahnya.
+
+     Sebelumnya ketiganya dipaksa satu baris. Di lebar 411px, isi barisnya
+     butuh 277 + 92 + 100 + 20 = 489px sedangkan ruangnya hanya 379px, jadi
+     "Bersihkan" terbuang ke baris sendiri dan terlihat seperti salah taruh.
+     Dengan dipecah, tidak ada tombol yang jadi anak yatim. */
+  .field-row { flex-wrap: wrap; }
+  .field-row .input-re { flex: 1 1 100%; }
+  .field-row .btn { flex: 1 1 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

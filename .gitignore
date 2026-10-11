@@ -22,6 +22,12 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Proyek iseng (opener motion graphic), bukan bagian dari produk ini.
+# Sekarang ada di luar repo (saudara folder ini), tapi tetap didaftarkan
+# supaya kalau tanpa sengaja kembali dipindah ke dalam sini, dia langsung
+# diabaikan dan tidak ikut ter-commit.
+RE-to-DFA-opener/
+
 # Berkas sementara
 *.tmp
 *.log
