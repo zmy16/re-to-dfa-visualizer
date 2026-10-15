@@ -14,6 +14,8 @@ const dom = {
   augmented: el('re-augmented'),
   astCanvas: el('ast-canvas'),
   followposTable: el('followpos-table'),
+  dfaView: el('dfa-view'),
+  dfaViewCount: el('dfa-view-count'),
   dfaTables: el('dfa-tables'),
   positionNote: el('position-note'),
   dfaCanvas: el('dfa-canvas'),
@@ -25,16 +27,25 @@ const dom = {
 };
 
 let result = null;
+let selectedView = 'min';
 let highlightedPosition = null;
 let activeStateId = null;
 let activeTransition = null; // { from, symbol, to }
 
-// Automaton yang ditampilkan tabel, diagram, dan simulator: DFA minimum.
-// Hasil minimisasi menerima bahasa yang sama persis dengan hasil konstruksi
-// langsung, hanya dengan jumlah state paling sedikit, jadi inilah yang dipakai.
+// Satu pilihan untuk tabel, diagram, sorotan, dan simulator.
 function activeView() {
-  if (!result) return null;
-  return result.views?.min ?? result;
+  return result?.views?.[selectedView] ?? null;
+}
+
+function renderView() {
+  const view = activeView();
+  dom.dfaViewCount.textContent = view
+    ? `${result.views.raw.states.length} → ${result.views.min.states.length} state. Menampilkan ${view.states.length} state.`
+    : '';
+  renderDfaTables(view);
+  renderDfaDiagram(view);
+  renderPositionNote(view);
+  renderSimulator();
 }
 
 /* ---------------- utilitas SVG ---------------- */
@@ -283,10 +294,7 @@ function toggleHighlight(position) {
   renderAst(result.root);
   renderFollowpos(result.followposTable);
   // State DFA yang memuat posisi ini ikut disorot supaya hubungan keduanya terlihat.
-  const view = activeView();
-  renderDfaTables(view);
-  renderDfaDiagram(view);
-  renderPositionNote(view);
+  renderView();
 }
 
 // Aturan sorotan posisi dihitung sekali di sini, lalu dipakai tabel maupun diagram,
@@ -569,6 +577,8 @@ function clearResults() {
   resetUiState();
   dom.augmented.hidden = true;
   dom.positionNote.hidden = true;
+  dom.dfaView.hidden = true;
+  dom.dfaViewCount.textContent = '';
   renderAst(null);
   renderFollowpos(null);
   renderDfaTables(null);
@@ -597,12 +607,10 @@ function runConversion(rawInput) {
   code.textContent = result.augmented;
   dom.augmented.append(label, code);
 
-  const view = activeView();
+  dom.dfaView.hidden = false;
   renderAst(result.root);
   renderFollowpos(result.followposTable);
-  renderDfaTables(view);
-  renderDfaDiagram(view);
-  renderSimulator();
+  renderView();
 }
 
 /* ---------------- tema terang / gelap ---------------- */
@@ -640,6 +648,14 @@ function initTheme() {
 
 function init() {
   initTheme();
+
+  dom.dfaView.addEventListener('change', (event) => {
+    if (!event.target.matches('input[name="dfa-view"]') || !result) return;
+    selectedView = event.target.value;
+    activeStateId = null;
+    activeTransition = null;
+    renderView();
+  });
 
   dom.form.addEventListener('submit', (event) => {
     event.preventDefault();

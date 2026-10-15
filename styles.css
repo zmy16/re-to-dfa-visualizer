@@ -457,7 +457,22 @@ td.is-position-match { color: var(--accent); font-weight: 650; }
 .verdict.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
 .verdict.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
 
-/* ---------- Legenda dan catatan metode ---------- */
+/* ---------- Pilihan DFA, legenda, dan catatan metode ---------- */
+.dfa-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+}
+.dfa-view[hidden] { display: none; }
+.dfa-view legend { padding: 0 5px; font-weight: 650; }
+.dfa-view label { display: inline-flex; align-items: center; min-height: 44px; gap: 7px; cursor: pointer; }
+.dfa-view input { accent-color: var(--accent); }
+#dfa-view-count { color: var(--ink-2); font-size: 0.8125rem; }
 .legend {
   display: flex;
   flex-wrap: wrap;

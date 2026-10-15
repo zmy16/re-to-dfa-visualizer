@@ -136,6 +136,13 @@
         <span class="hint">Satu tabel memuat identitas state dan transisinya. State diberi label dari <code>firstpos(root)</code>; state yang memuat posisi penanda <code>#</code> bersifat menerima.</span>
       </div>
 
+      <fieldset id="dfa-view" class="dfa-view" hidden>
+        <legend>Tampilan DFA</legend>
+        <label><input type="radio" name="dfa-view" value="raw"> Sebelum minimisasi</label>
+        <label><input type="radio" name="dfa-view" value="min" checked> Setelah minimisasi</label>
+        <span id="dfa-view-count" aria-live="polite"></span>
+      </fieldset>
+
       <div class="legend">
         <span><i class="swatch"></i> State biasa</span>
         <span><i class="swatch swatch--accept"></i> State penerima</span>
@@ -198,7 +205,7 @@
           <dd>State awal adalah <code>firstpos(root)</code>. Untuk tiap state dan tiap simbol alfabet, gabungkan <code>followpos</code> dari posisi yang memuat simbol itu; gabungan tak kosong menjadi transisi dan, bila baru, menjadi state berikutnya. State yang memuat posisi <code>#</code> bersifat menerima.</dd>
 
           <dt>Batas rilis ini</dt>
-          <dd>Konstruksi langsung tidak menjamin jumlah state minimum, jadi minimisasi DFA belum termasuk. Sintaks epsilon, escape operator, dan larangan simbol <code>#</code> serta <code>•</code> sebagai input masih menunggu keputusan pada <code>spec.md</code>.</dd>
+          <dd>Konstruksi langsung tidak menjamin jumlah state minimum. Pilih DFA sebelum atau setelah minimisasi untuk membandingkan jumlah state dan transisinya. Kedua DFA menerima bahasa yang sama.</dd>
         </div>
       </dl>
     </div>
