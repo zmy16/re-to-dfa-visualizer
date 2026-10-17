@@ -1,5 +1,7 @@
 # RE to DFA Visualizer
 
+![RE to DFA Visualizer: ekspresi (a|b)*abb menjadi syntax tree beranotasi, lalu menjadi diagram DFA empat state](banner-github.png)
+
 Alat web untuk mempelajari konversi **regular expression (RE)** menjadi **deterministic finite automaton (DFA)** secara langsung melalui *syntax tree* dan `followpos`, tanpa NFA perantara. Setiap tahap perhitungan ditampilkan, bukan hanya hasil akhirnya.
 
 Dibuat untuk mahasiswa, dosen, dan praktisi yang ingin memeriksa *mengapa* sebuah DFA terbentuk, bukan sekadar menerimanya.
@@ -59,12 +61,15 @@ re-to-dfa-visualizer/
 ├── index.html                     antarmuka satu halaman, enam modul
 ├── styles.css                     token warna terang dan gelap, layout responsif
 ├── package.json                   skrip test, serve, dan build
+├── banner-github.png              gambar banner untuk README
 ├── src/
 │   ├── engine.js                  konversi RE ke DFA, minimisasi, simulator (tanpa DOM)
+│   ├── diagram.js                 geometri dan gambar SVG diagram DFA
 │   └── app.js                     rendering AST, tabel, diagram SVG, simulator, tema
 ├── scripts/
 │   ├── serve.mjs                  server statis untuk pengembangan lokal
-│   └── prepare-public.mjs         menyalin berkas aplikasi ke public/ untuk deploy
+│   ├── prepare-public.mjs         menyalin berkas aplikasi ke public/ untuk deploy
+│   └── make-banner.mjs            membuat ulang banner-github.png
 └── netlify.toml                   konfigurasi deploy Netlify
 ```
 
